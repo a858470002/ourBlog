@@ -1,0 +1,78 @@
+<?php
+	session_start();
+	header('content-type:text/html;charset=utf-8');
+	include("./database.php");
+	
+	//获取地址中的action
+	$action = $_GET['action'];
+	
+	switch($action){
+		//登录判断
+		case 'login':
+			$email = $_POST['email'];
+			$password = $_POST['password'];
+			$password = md5($password);
+			
+			//拼接select语句
+			$sql = "select * from user where email='".$email."' and password='".$password."'";
+
+			//执行得到结果，并跳转
+			$res = mysqli_query($link,$sql);
+			if($res && mysqli_num_rows($res)>0){
+				$user = mysqli_fetch_assoc($res);
+				$_SESSION['user']=$user['id'];	//存session
+				echo "<script>alert('验证成功');window.location.href='../admin/index.php';</script>";
+			} else {
+				echo "<script>alert('验证失败');window.location.href='../admin/login.php';</script>";
+			}
+			break;
+		//添加文章
+		case 'add':
+			$title = $_POST['title'];
+			$formaltext = '';
+			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);//拼接sql专用的字符串处理
+			$column = $_POST['column'];
+
+			//拼接insert语句
+			$sql = "insert into article(title,formaltext,`column`) value ('{$title}','{$formaltext}','{$column}');";
+			//执行，得到结果
+			$res = mysqli_query($link,$sql);
+			if($res && mysqli_affected_rows($link)>0){
+				echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
+			} else {
+				echo "<script>alert('添加失败');window.location.href='../admin/add.php';</script>";
+			}
+			break;
+		//修改文章
+		case 'edit':
+			$id = $_GET['id'];
+			$title = $_POST['title'];
+			$formaltext = $_POST['formaltext'];
+			$column = $_POST['column'];
+
+			//拼接update语句
+			$sql = "update article set title='{$title}',formaltext='{$formaltext}',`column`='{$column}' where id={$id};";
+			
+			//执行，判断并跳转
+			$res = mysqli_query($link,$sql);
+			if($res){
+				echo "<script>alert('修改成功');window.location.href='../admin/index.php';</script>";
+			} else {
+				echo "<script>alert('修改失败');window.location.href='../admin/edit.php?id={$id}';</script>";
+			}
+			break;
+		//删除文章
+		case 'delete':
+			$id = $_GET['id'];
+			
+			//拼接delete语句并跳转
+			$sql = "delete from `article` where id={$id}";
+			$res = mysqli_query($link,$sql);
+			if($res){
+				echo "<script>alert('删除成功');window.location.href='../admin/index.php';</script>";
+			} else {
+				echo "<script>alert('删除失败');window.location.href='../admin/index.php';</script>";
+			}
+
+			break;
+	}

@@ -1,0 +1,44 @@
+a {text-decoration: none;}
+ul {list-style: none;}
+li a{
+	color: black;
+	font-weight: 900;
+	font-size: 20px;
+}
+
+#logo {
+	color: black;
+	font-size: 40px;
+	font-weight: 900;
+}
+
+#body {
+	width: 80%;
+	margin:0 auto;
+	margin-top: 50px;
+	margin-bottom: 50px;
+}
+
+.nav {
+	color: black;
+	font-size: 14px;
+	margin-left: 50px;
+}
+
+.tag1 {
+	border: 2px solid black;
+	padding: 1px;
+	padding-left: 8px;
+	padding-right: 6px;
+	margin: 5px;
+	cursor:pointer;
+}
+
+.tag2 {
+	border: 2px solid grey;
+	padding: 1px;
+	padding-left: 8px;
+	padding-right: 6px;
+	margin: 5px;
+	cursor:pointer;
+}

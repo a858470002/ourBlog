@@ -1,0 +1,43 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="../main.css">
+</head>
+<body>
+	<div id="body">
+		<!-- header of body -->
+		<?php
+			session_start();
+			include("./header.php");
+			include("../config/database.php");
+			
+			//判断用户是否登录
+			if(empty($_SESSION['user'])){
+				echo "<script>alert('请登录');window.location.href='./login.php';</script>";
+			} else {
+				//成功，查询 遍历导航栏，并存入数组
+				$sql = "select * from article";
+				$res = mysqli_query($link,$sql);
+				$article = array();
+				while($row = mysqli_fetch_array($res)){
+					$article[] = $row;
+				};
+			}
+		?>
+		<!-- content -->
+		<table width="90%" style="margin: 0 auto;">
+			<?php 
+				foreach ($article as $value) {
+					echo "<tr>
+							<td width='80%''><a>".$value['title']."</a></td>
+							<td>
+								<a href='./edit.php?id=".$value['id']."'>修改</a>
+								<a href='../config/functions.php?action=delete&id=".$value['id']."'>删除</a>
+							</td>
+						</tr>";
+				}
+			 ?>
+		</table>
+	</div>
+</body>
+</html>

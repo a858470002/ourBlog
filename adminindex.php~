@@ -1,0 +1,40 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<style type="text/css">
+		a {text-decoration: none;}
+	</style>
+</head>
+<body>
+	<div style="width: 80%;margin:0 auto;margin-top: 50px;">
+		<!-- header of body -->
+		<?php
+			session_start();
+			include("./header.php");
+			include("./database.php");
+
+			if(empty($_SESSION['user'])){
+				echo "<script>alert('请登录');window.location.href='./login.php';</script>";
+			} else {
+				$sql = "select * from article";
+				$res = mysqli_query($link,$sql);
+				$article = array();
+				while($row = mysqli_fetch_array($res)){
+					$article[] = $row;
+				};
+			}
+		?>
+		<!-- content -->
+		<table width="100%">
+			
+			<tr>
+				<td width="80%"><a>title1</a></td>
+				<td>
+					<a href="doedit.php?id=">edit</a>
+					<a href="dodel.php?id=">delete</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
