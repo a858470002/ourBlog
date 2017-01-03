@@ -1,0 +1,3 @@
+# ourBlog
+Blog
+sql文件在根目录，在做标签功能的时候做了两个版本，所以代码当中有一些被注释掉的是没用的。functions和数据库config放在config文件夹下，后台在admin文件夹。
