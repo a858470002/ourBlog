@@ -28,11 +28,10 @@
 			$column = array();
 			while($row = mysqli_fetch_array($res)){
 				$column[] = $row;
-			};
+			}
 		?>
 		<!-- content -->
 		<form id="form" action="../config/functions.php?action=add" method="post">
-			<input type="text" name="user_id" value="<?php echo $user_id ?>">
 			<select id="column" name="column">
 				<option value="0">所属栏目</option>
 				<?php

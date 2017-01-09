@@ -3,6 +3,14 @@
 <?php 
 	include("./config/database.php");
 
+	//checkout user
+	session_start();
+	if(!isset($_SESSION['user'])){
+		echo "<script>alert('请登录');window.location.href='./login.php';</script>";
+	} else {
+        $user_id = $_SESSION['user'];
+    }
+
 	//查询 遍历所有导航栏
 	$sql = "select * from types;";
 	$res = mysqli_query($link,$sql);
@@ -11,7 +19,7 @@
 		$types[] = $row;
 	}
 	foreach ($types as $value) {
-		echo "<a class='nav' href='./index.php?type={$value['id']}'>{$value['name']}</a>";
+		echo "<a class='nav' href='./index.php?type={$value['id']}&user_id={$user_id}'>{$value['name']}</a>";
 	}
  ?>
  <hr style="margin-bottom: 50px;">

@@ -7,42 +7,51 @@
 	<div id="body">
 		<!-- header -->
 		<?php
-			include("./header.php");
-			include("../config/database.php");
+            if (!isset($_GET['id'])) {
+                echo "<center><h1>Forbidden!</h1></center>";
+                exit;
+            }
 
-			//查找 遍历所有的栏目，并存入数组
-			$sql = "SELECT * from types";
-			$res = mysqli_query($link,$sql);
-			$column = array();
-			while($row = mysqli_fetch_array($res)){
-				$column[] = $row;
-			};
+            include("./header.php");
+            include("../config/database.php");
 
-			//查找 遍历article
+            //查找 遍历所有的栏目，并存入数组
+            $sql = "SELECT * from types";
+            $res = mysqli_query($link,$sql);
+            $column = array();
+            while ($row = mysqli_fetch_array($res)) {
+                $column[] = $row;
+            }
+
+            //查找 遍历article
 			$id = $_GET['id'];
-			$sql = "SELECT * from article where id={$id}";
+			$sql = "SELECT * from article where id={$id} and user_id={$user_id}";
 			$res = mysqli_query($link,$sql);
-			if($res && mysqli_num_rows($res)>0){
+			if ($res && mysqli_num_rows($res)>0) {
 				$article = mysqli_fetch_assoc($res);
-			}
+			} else {
+                echo "<center>Article don't exists or illegal user !</center>";
+                die;
+            }
 
             //查找 遍历所有的tag，并存入数组
             $sql = "SELECT * from tag";
             $res = mysqli_query($link,$sql);
             $tag_all = array();
-            while($row = mysqli_fetch_array($res)){
+            while ($row = mysqli_fetch_array($res)) {
                 $tag_all[] = $row;
-            };
+            }
 
             //查找 遍历article
             $tag_id =  explode(',',$article['tag']);
             foreach ($tag_all as $value) {
-                # code...
                 foreach ($tag_id as $value_id) {
-                    # code...
                     if ($value_id == $value['id']) {
                         $tag_res["{$value['id']}"] = $value['name'];
                         $tag_resid[] = $value['id'];
+                    } else {
+                        $tag_res = array();
+                        $tag_resid = array();
                     }
                 }
             }
@@ -53,7 +62,7 @@
 			<select id="column" name="column" style="min-width:200px;background: white;">
 				<option value="0">所属栏目</option>
 				<?php
-					foreach($column as $v){
+					foreach ($column as $v) {
 						if ($v['id'] == $article['column']) {
 							echo "<option value=".$v['id']." selected>".$v['name']."</option>";
 						} else {

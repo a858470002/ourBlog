@@ -8,7 +8,8 @@
 		<!-- header -->
 		<?php
 			include("./header.php");
-			$type = @$_GET['type'];
+
+			$type = isset($_GET['type']) ? $_GET['type'] : NULL;
 			
 			//如果点击了不同栏目，查询不同结果
 			if ($type != NULL) {
