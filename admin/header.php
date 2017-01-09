@@ -6,8 +6,7 @@
 <?php 
 	//判断用户是否登录
 	session_start();
-	if(empty($_SESSION['user'])){
+	if(!isset($_SESSION['user'])){
 		echo "<script>alert('请登录');window.location.href='./login.php';</script>";
 	}
-    session_regenerate_id();
  ?>
