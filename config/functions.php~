@@ -4,30 +4,19 @@
 	include("./database.php");
 	
 	//获取地址中的action
-	if (isset($_GET['action'])) {
-		$action = $_GET['action'];
-	} else {
-		echo "<script>alert('Illegal Operation !');window.location.href='../admin/index.php';</script>";
-	}
+	$action = $_GET['action'];
 	
 	switch($action){
 		//登录判断
 		case 'login':
 			$email = $_POST['email'];
-			$password = md5($_POST['password']);
-
-			$pattern = "/^([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)$/i";
-			if ( preg_match( $pattern, $email ) ) {
-				continue;
-			} else {
-				echo "<script>alert('Illegal E-mail Address !');window.location.href='../admin/index.php';</script>";
-				exit;
-			}
-
+			$password = $_POST['password'];
+			$password = md5($password);
+			
 			//拼接select语句执行得到结果，并跳转
 			$sql = "SELECT * from `user` where `email`='{$email}' and `password`='{$password}'";
 			$res = mysqli_query($link,$sql);
-			if ($res && mysqli_num_rows($res)>0) {
+			if($res && mysqli_num_rows($res)>0){
 				$user = mysqli_fetch_assoc($res);
 				$_SESSION['user']=$user['id'];	//存session
 				echo "<script>alert('验证成功');window.location.href='../admin/index.php';</script>";
