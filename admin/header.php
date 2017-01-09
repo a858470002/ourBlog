@@ -8,5 +8,7 @@
 	session_start();
 	if(!isset($_SESSION['user'])){
 		echo "<script>alert('请登录');window.location.href='./login.php';</script>";
-	}
+	} else {
+        $user_id = $_SESSION['user'];
+    }
  ?>
