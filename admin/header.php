@@ -9,4 +9,5 @@
 	if(empty($_SESSION['user'])){
 		echo "<script>alert('请登录');window.location.href='./login.php';</script>";
 	}
+    session_regenerate_id();
  ?>

@@ -2,7 +2,7 @@
 	session_start();
 	header('content-type:text/html;charset=utf-8');
 	include("./database.php");
-	
+
 	//获取地址中的action
 	if (isset($_GET['action'])) {
 		$action = $_GET['action'];
@@ -39,6 +39,7 @@
 
 		//添加文章
 		case 'add':
+			loginCheck();
 			$title = $_POST['title'];
 			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);//拼接sql专用的字符串处理
 			$column = $_POST['column'];
@@ -56,6 +57,7 @@
 
 		//修改文章
 		case 'edit':
+			loginCheck();
 			$id = $_GET['id'];
 			$title = $_POST['title'];
 			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);	//拼接sql专用的字符串处理
@@ -74,6 +76,7 @@
 
 		//删除文章
 		case 'delete':
+			loginCheck();
 			$id = $_GET['id'];
 			
 			//拼接delete语句并跳转
@@ -89,6 +92,7 @@
 
 		//添加标签
 		case 'tag':
+			loginCheck();
 			$text = $_POST['text'];
 			$id = $_POST['id'];
 			
@@ -101,6 +105,7 @@
 
 		//添加标签
 		case 'addTag':
+			loginCheck();
 			$articleId = $_POST['articleId'];
 			$tagId = $_POST['id'];
 
@@ -120,6 +125,7 @@
 		
 		//删除标签
 		case 'reduceTag':
+			loginCheck();
 			$articleId = $_POST['articleId'];
 			$tagId = $_POST['id'];
 
@@ -148,6 +154,7 @@
 
 		//添加新标签
 		case 'newTag':
+			loginCheck();
 			$text = $_POST['text'];
 			$articleId= $_POST['id'];
 
@@ -175,7 +182,13 @@
 				
 				break;
 			}
-			
+	}
 
-			
+	function loginCheck() 
+	{
+		if(empty($_SESSION['user'])){
+			echo "<script>alert('请登录');window.location.href='../admin/login.php';</script>";
+			exit;
+		}
+		session_regenerate_id();
 	}
