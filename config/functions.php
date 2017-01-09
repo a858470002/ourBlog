@@ -14,10 +14,18 @@
 	switch($action){
 		//登录判断
 		case 'login':
+			if (!isset($email)) {
+				echo "<script>alert('Please fill the blank!');window.location.href='../admin/index.php';</script>";
+				exit;
+			}
 			$email = filter_var(($_POST['email']),FILTER_VALIDATE_EMAIL);
 			if (!$email) {
-			    throw new InvalidArgumentException('invalid email');
+			    echo "<script>alert('ivalid rules!');window.location.href='../admin/index.php';</script>";
+			    exit;
+			} else {
+				$email = mysqli_real_escape_string($email);
 			}
+
 			$password = md5($_POST['password']);
 
 			//拼接select语句执行得到结果，并跳转
@@ -39,10 +47,10 @@
 			loginCheck();
 			$title = mysqli_real_escape_string($_POST['title']);
 			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);//拼接sql专用的字符串处理
-			$column = mysqli_real_escape_string($_POST['column']);
+			$column = filter_var(($_GET['column']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
 			//拼接insert语句,执行，得到结果
-			$sql = "INSERT into `article`(title,formaltext,`column`) VALUES ('{$title}','{$formaltext}','{$column}');";
+			$sql = "INSERT into `article`(title,formaltext,`column`) VALUES ('{$title}','{$formaltext}',{$column});";
 			$res = mysqli_query($link,$sql);
 			if($res && mysqli_affected_rows($link)>0){
 				echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
@@ -55,13 +63,13 @@
 		//修改文章
 		case 'edit':
 			loginCheck();
-			$id = filter_var(($_GET['id']),FILTER_VALIDATE_INT);
+			$id = filter_var(($_GET['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$title = mysqli_real_escape_string($_POST['title']);
 			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);	//拼接sql专用的字符串处理
-			$column = mysqli_real_escape_string($_POST['column']);
+			$column = filter_var(($_GET['column']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
 			//拼接update语句,执行，判断并跳转
-			$sql = "UPDATE `article` set `title`='{$title}',`formaltext`='{$formaltext}',`column`='{$column}' where `id`={$id};";
+			$sql = "UPDATE `article` set `title`='{$title}',`formaltext`='{$formaltext}',`column`={$column} where `id`={$id};";
 			$res = mysqli_query($link,$sql);
 			if ($res) {
 				echo "<script>alert('修改成功');window.location.href='../admin/index.php';</script>";
