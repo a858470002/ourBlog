@@ -7,7 +7,7 @@
 	if (isset($_GET['action'])) {
 		$action = $_GET['action'];
 	} else {
-		echo "<script>alert('Illegal Operation !');window.location.href='../admin/index.php';</script>";
+		header('Location: /admin/index.php');
 		exit;
 	}
 	
@@ -15,8 +15,7 @@
 		//登录判断
 		case 'login':
 			//Null check
- 			if (!isset($_POST['email']) || !isset($_POST['password'])) 
- 			{
+ 			if (!isset($_POST['email']) || !isset($_POST['password'])) {
  				echo "<script>alert('Please fill the blank!');window.location.href='../admin/login.php';</script>";
 				exit;
  			}
@@ -24,7 +23,7 @@
 			$email = filter_var(($_POST['email']),FILTER_VALIDATE_EMAIL);
 			$password = md5($_POST['password']);
 
-			//Email illegal check
+			//Email valid check
 			if (!$email) {
 			    echo "<script>alert('ivalid rules!');window.location.href='../admin/login.php';</script>";
 			    exit;
@@ -33,14 +32,14 @@
 			}
 
 
-			//拼接select语句执行得到结果，并跳转
-			$sql = "SELECT * from `user` where `email`='{$email}' and `password`='{$password}'";
+			//User check
+			$sql = "SELECT * from user where `email`='{$email}' and password='{$password}'";
 			$res = mysqli_query($link,$sql);
 			if ($res && mysqli_num_rows($res)>0) {
 				$user = mysqli_fetch_assoc($res);
-				$_SESSION['user']=$user['id'];	//存session
+				$_SESSION['user']=$user['id'];
 				session_regenerate_id();
-				echo "<script>alert('验证成功');window.location.href='../admin/index.php';</script>";
+				header('Location: /admin/index.php');
 			} else {
 				echo "<script>alert('验证失败');window.location.href='../admin/login.php';</script>";
 			}
@@ -51,8 +50,8 @@
 		case 'add':
 			loginCheck();
 
- 			//Null check
- 			if (!isset($_POST['title']) || !isset($_POST['formaltext'])) 
+            //Null check
+ 			if (!isset($_POST['title']) || !isset($_POST['formaltext']) || !isset($_POST['column']) || !isset($_POST['tag'])) 
  			{
  				echo "<script>alert('Please fill the blank!');window.location.href='../admin/add.php';</script>";
 				exit;
@@ -63,8 +62,8 @@
  			textCheck($_POST['formaltext'],'text',65535,'../admin/add.php');
 
  			$title = mysqli_real_escape_string($link,$_POST['title']);
-			$formaltext = mysqli_real_escape_string($link,$_POST['formaltext']);	//拼接sql专用的字符串处理
-			$column = filter_var(($_POST['column']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+			$ftext = mysqli_real_escape_string($link,$_POST['formaltext']);
+			$column =  filter_var($_POST['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
  			$user_id = filter_var($_SESSION['user'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
  			//Illegal check
@@ -74,7 +73,7 @@
 			}
 
 			//拼接insert语句,执行，得到结果
-			$sql = "INSERT into `article`(title,formaltext,`column`,`user_id`) VALUES ('{$title}','{$formaltext}',{$column},{$user_id});";
+			$sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ('{$title}','{$ftext}',{$column},'{$user_id}');";
 			$res = mysqli_query($link,$sql);
 			if($res && mysqli_affected_rows($link)>0){
 				echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
@@ -100,7 +99,7 @@
  			textCheck($_POST['formaltext'],'text',65535,'../admin/edit.php');
 
 			$title = mysqli_real_escape_string($link,$_POST['title']);
-			$ftext = mysqli_real_escape_string($link,$_POST['formaltext']);	//拼接sql专用的字符串处理
+			$ftext = mysqli_real_escape_string($link,$_POST['formaltext']);
 			$column = filter_var(($_POST['column']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$article_id =  filter_var(($_GET['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
@@ -110,8 +109,8 @@
 			    exit;
 			}
 
-			//拼接update语句,执行，判断并跳转
-			$sql = "UPDATE `article` set `title`='{$title}',`formaltext`='{$ftext}',`column`={$column} where `id`={$article_id};";
+			//Update article
+			$sql = "UPDATE article set title='{$title}',formaltext='{$ftext}',`column`={$column} where id={$article_id};";
 			$res = mysqli_query($link,$sql);
 			if ($res) {
 				echo "<script>alert('修改成功');window.location.href='../admin/index.php';</script>";
@@ -127,20 +126,20 @@
 
             //Null id check
             if (!isset($_GET['id'])) {
-                echo "<script>alert('Forbidden');window.location.href='../admin/index.php';</script>";
+                header('Location: /admin/index.php');
                 exit;
             }
 
             //Valid id check
 			$id = filter_var(($_GET['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
             $user_id = filter_var($_SESSION['user'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-			if (!$id) {
+			if (!$id || $user_id) {
 			    echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
                 exit;
 			}
 			
-			//拼接delete语句并跳转
-			$sql = "DELETE from `article` where `id`={$id} and user_id={$user_id}";
+			//Delete article
+			$sql = "DELETE from article where id={$id} and user_id={$user_id}";
 			$res = mysqli_query($link,$sql);
 			if ($res && mysqli_affected_rows($link)==1) {
 				echo "<script>alert('删除成功');window.location.href='../admin/index.php';</script>";
@@ -160,9 +159,13 @@
             }
 			$text = mysqli_real_escape_string($link,$_POST['text']);
 			$id = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-			
+			//Illegal check
+            if (!$id) {
+                echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
 			//执行，判断并跳转
-			$sql = "UPDATE `article` set `tag`='{$text}' where `id`={$id};";
+			$sql = "UPDATE article set tag='{$text}' where id={$id};";
 			$res = mysqli_query($link,$sql);
 			echo $res ? "success" : "failed";
 
@@ -179,16 +182,23 @@
 
 			$articleId = filter_var(($_POST['articleId']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$tagId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-
-			//
-			$sql = "SELECT * from article where `id`='{$articleId}' and `user_id`={$user_id}";
+            
+            //Illegal check
+            if (!$articleId || !$tagId) {
+                echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
+			
+            //Searching for article by id&user_id
+			$sql = "SELECT * from article where id='{$articleId}' and user_id={$user_id}";
 			$res = mysqli_query($link,$sql);
 			if($res && mysqli_num_rows($res)>0){
 				$data = mysqli_fetch_assoc($res);
-			}
-			$newData = $data['tag'].$tagId.",";
+                $newData = $data['tag'].$tagId.",";
+            }
 
-			$sql = "UPDATE `article` set `tag`='{$newData}' where `id`={$articleId};";
+			//Update article
+            $sql = "UPDATE article set tag='{$newData}' where id={$articleId};";
 			$res = mysqli_query($link,$sql);
 			echo $res?"success":"failed";
 
@@ -206,26 +216,34 @@
 			$articleId = filter_var(($_POST['articleId']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$tagId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
-			//查找该文章的所有标签
-			$sql = "SELECT * from article where `id`='{$articleId}' and `user_id`={$user_id}";
-			$res = mysqli_query($link,$sql);
-			if($res && mysqli_num_rows($res)>0){
-				$data = mysqli_fetch_assoc($res);
-			}
-			$arr = explode(",", $data['tag']);
-			foreach ($arr as $values) {
-				if ($values == $tagId) {
-					//如果相等则跳过
-				} else {
-					$newArr[] = $values;
-				}
-			}
-			$str = implode(",", $newArr);
+			//Illegal check
+            if (!$articleId || !$tagId) {
+                echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
 
-			//更新标签
-			$sql = "UPDATE `article` set `tag`='{$str}' where `id`={$articleId} and `user_id`={$user_id};";
+            //查找该文章的所有标签
+			$sql = "SELECT * from article where id='{$articleId}' and user_id={$user_id}";
 			$res = mysqli_query($link,$sql);
-			echo $res?"success":"failed";
+			if ($res && mysqli_num_rows($res)>0) {
+				$data = mysqli_fetch_assoc($res);
+                $arr = explode(",", $data['tag']);
+    			foreach ($arr as $values) {
+    				if ($values == $tagId) {
+    					//如果相等则跳过
+    				} else {
+    					$newArr[] = $values;
+    				}
+    			}
+    			$str = implode(",", $newArr);
+
+    			//更新标签
+    			$sql = "UPDATE article set tag='{$str}' where id={$articleId} and user_id={$user_id};";
+    			$res = mysqli_query($link,$sql);
+    			echo $res?"success":"failed";
+            } else {
+                echo "failed";
+            }
 
 			break;
 
@@ -238,30 +256,38 @@
                 exit;
             }
 
-			$text = filter_var(($_POST['text']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+			$text = mysqli_real_escape_string($link,$_POST['text']);
 			$articleId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
-			//拼接insert语句,执行，得到结果
-			$sql = "INSERT into `tag` (`name`) VALUES ('{$text}');";
+			
+            //Illegal check
+            if (!$articleId) {
+                echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
+
+            //Add new tag into table tag
+			$sql = "INSERT into tag (name) VALUES ('{$text}');";
 			$res = mysqli_query($link,$sql);
 			$tagId = mysqli_insert_id($link);
 			if ($res && mysqli_affected_rows($link)>0) {
-
-				$sql = "SELECT * from article where `id`='{$articleId}' and `user_id`={$user_id}";
+				$sql = "SELECT * from article where id='{$articleId}' and user_id={$user_id}";
 				$res = mysqli_query($link,$sql);
 				if($res && mysqli_num_rows($res)>0){
 					$data = mysqli_fetch_assoc($res);
 				}
 				$newData = $data['tag'].$tagId.",";
 
-				//执行，判断并跳转
-				$sql = "UPDATE `article` set `tag`='{$newData}' where `id`='{$articleId}' and `user_id`={$user_id};";
+				//Success, and update the data
+				$sql = "UPDATE article set tag='{$newData}' where id='{$articleId}' and user_id={$user_id};";
 				$res = mysqli_query($link,$sql);
-				echo json_encode(array("id"=>$tagId, "text"=>$text));
+                if($res && mysqli_num_rows($res)>0){
+				    echo json_encode(array("id"=>$tagId, "text"=>$text));
+                }
 
 				break;
 			} else {
-				echo "failed";
+				echo false;
 				
 				break;
 			}
@@ -273,7 +299,8 @@
 			echo "<script>alert('请登录');window.location.href='../admin/login.php';</script>";
 			exit;
 		} else {
-			$user = $_SESSION['user'];
+			$user_id = $_SESSION['user'];
+            return $user_id;
 		}
 	}
 

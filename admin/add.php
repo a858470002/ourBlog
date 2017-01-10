@@ -22,12 +22,20 @@
 			include("./header.php");
 			include("../config/database.php");
 
-			//查找 遍历所有的栏目，并存入数组
-			$sql = "SELECT * from `types`";
+			//Searching for column
+			$sql = "SELECT * from types";
 			$res = mysqli_query($link,$sql);
 			$column = array();
 			while($row = mysqli_fetch_array($res)){
 				$column[] = $row;
+			}
+
+			//Searching for Tags
+			$sql = "SELECT * from tag";
+			$res = mysqli_query($link,$sql);
+			$tags = array();
+			while($row = mysqli_fetch_array($res)){
+				$tags[] = $row;
 			}
 		?>
 		<!-- content -->
@@ -44,6 +52,12 @@
 			<input id="title" type="text" name="title" placeholder="标题" style="width: 40%;">
 			<br><br>
 			<textarea id="formaltext" name="formaltext" placeholder="正文" style="width: 80%;height: 500px;overflow-y: scroll;resize: none;"></textarea>
+			<br><br>
+			<?php
+				foreach($tags as $v){
+					echo "<input type='checkbox' name='tag[]' value=".$v['id'].">".$v['name']."</option>";
+				};
+			?>
 			<br><br>
 			<button onclick="check()" type="button">提交</button>
 			<input type="button" onclick="link()" value="插入链接" />

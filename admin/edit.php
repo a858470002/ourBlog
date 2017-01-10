@@ -209,8 +209,12 @@
                   'id':id
             },
             success:function(data){
-                $("#tag_"+id).attr("value",text);
-                $("#tagRegion").append("<span id='tag"+data.id+"' class='tag1' onclick='reducetag("+data.id+")' value='"+data.text+"'>"+data.text+"</span>")
+                if (data != false) {
+                    $("#tag_"+id).attr("value",text);
+                    $("#tagRegion").append("<span id='tag"+data.id+"' class='tag1' onclick='reducetag("+data.id+")' value='"+data.text+"'>"+data.text+"</span>")
+                } else {
+                    alert('Param error~');
+                }
             },
             error:function(data){
                 console.log(data);
