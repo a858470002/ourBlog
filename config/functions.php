@@ -48,38 +48,111 @@
 
 		//添加文章
 		case 'add':
-			loginCheck();
+			$user_id = loginCheck();
 
             //Null check
- 			if (!isset($_POST['title']) || !isset($_POST['formaltext']) || !isset($_POST['column']) || !isset($_POST['tag'])) 
- 			{
- 				echo "<script>alert('Please fill the blank!');window.location.href='../admin/add.php';</script>";
-				exit;
- 			}
+            if (!isset($_POST['title']) || !isset($_POST['formaltext']) || !isset($_POST['column']) || !isset($_POST['tag'])) {
+                echo "<script>alert('Please fill the blank!');window.location.href='../admin/add.php';</script>";
+                exit;
+            }
 
- 			//Length check
- 			textCheck($_POST['title'],'varchar',64,'../admin/add.php');
- 			textCheck($_POST['formaltext'],'text',65535,'../admin/add.php');
+            //Length check
+            textCheck($_POST['title'],'varchar',64,'../admin/add.php');
+            textCheck($_POST['formaltext'],'text',65535,'../admin/add.php');
+            $tags_old = explode(',', $_POST['tag']);
+            foreach ($tags_old as $value) {
+                textCheck($value,'varchar',32,'../admin/add.php');
+                $tags[] = mysqli_real_escape_string($link,$value);
+            }
+            $title = mysqli_real_escape_string($link,$_POST['title']);
+            $ftext = mysqli_real_escape_string($link,$_POST['formaltext']);
+            $column =  filter_var($_POST['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
- 			$title = mysqli_real_escape_string($link,$_POST['title']);
-			$ftext = mysqli_real_escape_string($link,$_POST['formaltext']);
-			$column =  filter_var($_POST['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
- 			$user_id = filter_var($_SESSION['user'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+            //Valid check
+            if (!$user_id || !$column) {
+                echo "<script>alert('Ivalid rules!');window.location.href='../admin/add.php';</script>";
+                exit;
+            }
 
- 			//Illegal check
-			if (!$user_id || !$column) {
-			    echo "<script>alert('Ivalid rules!');window.location.href='../admin/add.php';</script>";
-			    exit;
-			}
+            mysqli_autocommit($link,FALSE);
+            // Insert1: new article
+            $sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ('{$title}','{$ftext}',{$column},'{$user_id}');";
+            $res1 = mysqli_query($link,$sql);
+            $articleId = mysqli_insert_id($link);
 
-			//拼接insert语句,执行，得到结果
-			$sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ('{$title}','{$ftext}',{$column},'{$user_id}');";
-			$res = mysqli_query($link,$sql);
-			if($res && mysqli_affected_rows($link)>0){
-				echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
-			} else {
-				echo "<script>alert('添加失败');window.location.href='../admin/add.php';</script>";
-			}
+            // Select all tags ,match the same 
+            $param = "";
+            foreach ($tags as $value) {
+                $param .= "'{$value}',";
+            }
+            $param = trim($param,",");
+            $sql_sel = "SELECT * from tag WHERE name in ({$param})";
+            $res2 = mysqli_query($link,$sql_sel);
+            $sameTags = array();
+            while($row = mysqli_fetch_array($res2)){
+                $sameTags[] = $row;
+            }
+
+            //Find the same tags id & name
+            foreach ($sameTags as $value) {
+                $arr_id[] = $value['id'];
+                $arr_name[] = $value['name'];
+            }
+            $arr_diff = array_diff($tags, $arr_name);
+
+            if (!empty($arr_diff)) {
+                // Insert2: new tag (match, and del the same tag)
+                $sql_tag = "INSERT into tag(name) VALUES ";
+                foreach ($arr_diff as $value) {
+                    $sql_tag .= "('{$value}'),";
+                }
+                $sql_tag = trim($sql_tag,",");
+                $res3 = mysqli_query($link,$sql_tag);
+                if($res3 && mysqli_affected_rows($link)>0){
+                    //Select diff tags id 
+                    $param = "";
+                    foreach ($arr_diff as $value) {
+                        $param .= "'{$value}',";
+                    }
+                    $param = trim($param,",");
+                    $sql_sel = "SELECT * from tag WHERE name in ({$param})";
+                    $res4 = mysqli_query($link,$sql_sel);
+                    if($res4 && mysqli_affected_rows($link)>0){
+                        $diffTags = array();
+                        while($row = mysqli_fetch_array($res4,MYSQLI_BOTH)){
+                            $diffTags[] = $row;
+                        }
+                    } else {
+                        mysqli_rollback($link);
+                        echo "<script>alert('添加失败');window.location.href='../admin/add.php';</script>";
+                    }
+
+                    //Find the same tags id & name
+                    foreach ($diffTags as $value) {
+                        $arr_id[] = $value['id'];
+                        $arr_name[] = $value['name'];
+                    }
+                } else {
+                    mysqli_rollback($link);
+                    echo "<script>alert('添加失败');window.location.href='../admin/add.php';</script>";
+                }
+            }
+
+			// Insert3: new tag & article (table tag_mid)
+            $sql_mid = "INSERT into tag_mid(tag_id,article_id) VALUES ";
+            foreach ($arr_id as $value) {
+                $sql_mid .= "({$value},{$articleId}),";
+            }
+            $sql_mid = trim($sql_mid,",");
+            $res5 = mysqli_query($link,$sql_mid);
+
+            if (!$res1 || !$res2 || !$res5 ) {
+                mysqli_rollback($link);
+                echo "<script>alert('添加失败');window.location.href='../admin/add.php';</script>";
+            } else {
+                mysqli_commit($link);
+                echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
+            }
 
 			break;
 
@@ -146,28 +219,6 @@
 			} else {
 				echo "<script>alert('删除失败:The article don\'t exist or incorrect user');window.location.href='../admin/index.php';</script>";
 			}
-
-			break;
-
-		//添加标签
-		case 'tag':
-			loginCheck();
-
-            if (!isset($_POST['text']) || !isset($_POST['id'])) {
-                header('Location: /admin/index.php');
-                exit;
-            }
-			$text = mysqli_real_escape_string($link,$_POST['text']);
-			$id = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-			//Illegal check
-            if (!$id) {
-                echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
-                exit;
-            }
-			//执行，判断并跳转
-			$sql = "UPDATE article set tag='{$text}' where id={$id};";
-			$res = mysqli_query($link,$sql);
-			echo $res ? "success" : "failed";
 
 			break;
 
@@ -311,7 +362,7 @@
 		 		$string = trim($string);
 		 		$num = mb_strlen($string,'UTF-8');
 		 		if ($num == 0 || $num > 65535) {
-		 			echo "<script>alert('Ivalid column rules!');window.location.href='".$url."';</script>";
+		 			echo "<script>alert('Invalid param length!');window.location.href='".$url."';</script>";
 		 			exit;
 		 		}
 		 		break;
@@ -321,7 +372,7 @@
 				$num = mb_strlen($string,'UTF-8');
 				if ($num == 0 || $num > $length) {
 					//error reporting
-					echo "<script>alert('Ivalid column rules!');window.location.href='".$url."';</script>";
+					echo "<script>alert('Invalid param length!');window.location.href='".$url."';</script>";
 					exit;
 				}
 		 		break;

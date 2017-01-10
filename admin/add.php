@@ -53,11 +53,7 @@
 			<br><br>
 			<textarea id="formaltext" name="formaltext" placeholder="正文" style="width: 80%;height: 500px;overflow-y: scroll;resize: none;"></textarea>
 			<br><br>
-			<?php
-				foreach($tags as $v){
-					echo "<input type='checkbox' name='tag[]' value=".$v['id'].">".$v['name']."</option>";
-				};
-			?>
+			<input id="tags" type='text' name='tag' placeholder='添加标签' >Use "," to split tag, it's impossible to use more than 32 char.
 			<br><br>
 			<button onclick="check()" type="button">提交</button>
 			<input type="button" onclick="link()" value="插入链接" />
