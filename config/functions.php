@@ -124,18 +124,28 @@
 		//删除文章
 		case 'delete':
 			loginCheck();
+
+            //Null id check
+            if (!isset($_GET['id'])) {
+                echo "<script>alert('Forbidden');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
+
+            //Valid id check
 			$id = filter_var(($_GET['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+            $user_id = filter_var($_SESSION['user'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			if (!$id) {
-			    throw new InvalidArgumentException('invalid id');
+			    echo "<script>alert('Ivalid rules!');window.location.href='../admin/index.php';</script>";
+                exit;
 			}
 			
 			//拼接delete语句并跳转
-			$sql = "DELETE from `article` where `id`={$id}";
+			$sql = "DELETE from `article` where `id`={$id} and user_id={$user_id}";
 			$res = mysqli_query($link,$sql);
-			if ($res) {
+			if ($res && mysqli_affected_rows($link)==1) {
 				echo "<script>alert('删除成功');window.location.href='../admin/index.php';</script>";
 			} else {
-				echo "<script>alert('删除失败');window.location.href='../admin/index.php';</script>";
+				echo "<script>alert('删除失败:The article don\'t exist or incorrect user');window.location.href='../admin/index.php';</script>";
 			}
 
 			break;
@@ -143,19 +153,30 @@
 		//添加标签
 		case 'tag':
 			loginCheck();
+
+            if (!isset($_POST['text']) || !isset($_POST['id'])) {
+                header('Location: /admin/index.php');
+                exit;
+            }
 			$text = mysqli_real_escape_string($link,$_POST['text']);
 			$id = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			
 			//执行，判断并跳转
 			$sql = "UPDATE `article` set `tag`='{$text}' where `id`={$id};";
 			$res = mysqli_query($link,$sql);
-			echo $res?"success":"failed";
+			echo $res ? "success" : "failed";
 
 			break;
 
 		//添加标签
 		case 'addTag':
 			loginCheck();
+
+            if (!isset($_POST['articleId']) || !isset($_POST['id'])) {
+                header('Location: /admin/index.php');
+                exit;
+            }
+
 			$articleId = filter_var(($_POST['articleId']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$tagId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
@@ -176,8 +197,14 @@
 		//删除标签
 		case 'reduceTag':
 			loginCheck();
+
+            if (!isset($_POST['articleId']) || !isset($_POST['id'])) {
+                header('Location: /admin/index.php');
+                exit;
+            }
+
 			$articleId = filter_var(($_POST['articleId']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-			$tagId =filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+			$tagId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
 			//查找该文章的所有标签
 			$sql = "SELECT * from article where `id`='{$articleId}' and `user_id`={$user_id}";
@@ -205,7 +232,13 @@
 		//添加新标签
 		case 'newTag':
 			loginCheck();
-			$text = $_POST['text'];
+
+            if (!isset($_POST['text']) || !isset($_POST['id'])) {
+                header('Location: /admin/index.php');
+                exit;
+            }
+
+			$text = filter_var(($_POST['text']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 			$articleId = filter_var(($_POST['id']),FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
 			//拼接insert语句,执行，得到结果
