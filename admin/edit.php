@@ -34,27 +34,39 @@
                 die;
             }
 
-            //查找 遍历所有的tag，并存入数组
-            $sql = "SELECT * from tag";
+            //Select from tag_mid 
+            $sql = "SELECT * from tag_mid where article_id = '$id' ";
             $res = mysqli_query($link,$sql);
-            $tag_all = array();
+            $tag_mid = array();
             while ($row = mysqli_fetch_array($res)) {
-                $tag_all[] = $row;
+                $tag_mid[] = $row;
             }
 
-            //查找 遍历article
-            $tag_id =  explode(',',$article['tag']);
-            foreach ($tag_all as $value) {
-                foreach ($tag_id as $value_id) {
-                    if ($value_id == $value['id']) {
-                        $tag_res["{$value['id']}"] = $value['name'];
-                        $tag_resid[] = $value['id'];
-                    } else {
-                        $tag_res = array();
-                        $tag_resid = array();
-                    }
+            if (!empty($tag_mid)){
+                foreach ($tag_mid as $value) {
+                    $tag_id[] = $value['tag_id'];
                 }
+
+                $param = "";
+                foreach ($tag_id as $value) {
+                    $param .= "'$value',";
+                }
+                $param = trim($param,",");
+                $sql = "SELECT * from tag where id in ($param) ";
+                $res = mysqli_query($link,$sql);
+                $tag_all = array();
+                while ($row = mysqli_fetch_array($res)) {
+                    $tag_all[] = $row;
+                }
+                foreach ($tag_all as $value) {
+                    $tag_name[] = $value['name'];
+                }
+                $tag_name = implode(',',$tag_name);
+            } else {
+                $tag_name = '';
             }
+            
+
 		?>
 		<!-- content -->
 		<form id="form" action="../config/functions.php?action=edit&id=<?php echo $article['id']; ?>" method="post">
@@ -73,28 +85,9 @@
             </select><br><br>
             <input id="title" type="text" name="title" placeholder="标题" value="<?php echo $article['title'] ?>" style="width:80%"><br><br>
             <textarea id="formaltext" name="formaltext" placeholder="正文" style="width: 80%;height: 500px;overflow-y: scroll;resize: none;"><?php echo $article['formaltext'] ?></textarea><br><br>
-            <div id="tagRegion">
-            <?php 
-
-                echo "<p>标签:</p>";
-
-                //checked tag
-                foreach ($tag_res as $key => $value) {
-                    echo "<span id='tag{$key}' class='tag1' onclick='reducetag({$key})' value='{$value}'>{$value}</span> ";
-                }
-
-                // echo "<br><br>";
-
-                //unchecked tag
-                foreach ($tag_all as $tag_all_value) {
-                    echo in_array($tag_all_value['id'],$tag_resid) ? null :
-                    "<span id='tag{$tag_all_value['id']}' class='tag2' onclick='addtag({$tag_all_value['id']})' value='{$tag_all_value['name']}'>{$tag_all_value['name']}</span>";
-                }
-             ?>
-            </div><br><br>
-            <span class="tag">+ 添加新标签</span>
-            <input id='tag_<?php echo $id ?>' class='tag' type='text' placeholder='添加标签'>
-            <input type="button" value="添加" onclick='input("<?php echo $id ?>")'>
+            
+            <input id='tag_<?php echo $id ?>' name='tag' type='text' placeholder='标签' value="<?php echo $tag_name ?>">Use "," to split tag, it's impossible to use more than 32 char.
+            <!-- <input type="button" value="添加" onclick='input("<?php echo $id ?>")'> -->
             <br><br>
             <button onclick="check()" type="button">提交</button>
             <input type="button" onclick="link()" value="插入文本" />
