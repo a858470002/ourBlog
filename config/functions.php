@@ -13,7 +13,7 @@
 	
 	switch($action){
 		//登录判断
-		case 'login':
+		case "login":
 			//Null check
  			if (!isset($_POST['email']) || !isset($_POST['password'])) {
  				echo "<script>alert('Please fill the blank!');window.location.href='../admin/login.php';</script>";
@@ -47,7 +47,7 @@
 			break;
 
 		//添加文章
-		case 'add':
+		case "add":
 			$user_id = loginCheck();
 
             //Null check
@@ -69,45 +69,38 @@
             }
             $title = mysqli_real_escape_string($link,$_POST['title']);
             $ftext = mysqli_real_escape_string($link,$_POST['formaltext']);
-            $column =  filter_var($_POST['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+            $column = filter_var($_POST['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 
             //Valid check
-            if (!$user_id || !$column) {
+            if (!$column) {
                 echo "<script>alert('Ivalid rules!');window.location.href='../admin/add.php';</script>";
                 exit;
             }
 
+            //Data check finish, mysql start
             mysqli_autocommit($link,FALSE);
 
             // Insert1: new article
-            $sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ('$title','$ftext','$column','$user_id');";
+            $sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ($title,$ftext,'$column',$user_id);";
             $res = mysqli_query($link,$sql);
-            if (!$res) {
-                mysqli_rollback($link);
-                echo "<script>alert('添加失败:error01');window.location.href='../admin/add.php';</script>";
-                exit;
-            }
+            resCheck($res,$link,'添加失败:error01','../admin/add.php');
 
             $articleId = mysqli_insert_id($link);
             $arr_name = array();
             $arr_id = array();
 
+            // If have tags
             if (!empty($tags)) {
                 // Select all tags ,match the same 
                 $param = "";
                 foreach ($tags as $value) {
                     $value = mysqli_real_escape_string($link,$value);
-                    $param .= "'$value',";
+                    $param .= "$value,";
                 }
                 $param = trim($param,",");
                 $sql_sel = "SELECT * from tag WHERE name in ($param)";
                 $res = mysqli_query($link,$sql_sel);
-                if (!$res) {
-                    mysqli_rollback($link);
-                    // var_dump($tags);
-                    echo "<script>alert('添加失败:error02');window.location.href='../admin/add.php';</script>";
-                    exit;
-                }
+                resCheck($res,$link,'添加失败:error02','../admin/add.php');
                 $sameTags = array();
                 while($row = mysqli_fetch_array($res)){
                     $sameTags[] = $row;
@@ -122,6 +115,7 @@
             } else {
                 $arr_diff = array();
             }
+
             //If appear new tags
             if (!empty($arr_diff)) {
                 // Insert2: new tag (match, and del the same tag)
@@ -132,37 +126,28 @@
                 }
                 $sql_tag = trim($sql_tag,",");
                 $res = mysqli_query($link,$sql_tag);
-                if($res && mysqli_affected_rows($link)>0){
-                    //Select diff tags id 
-                    $param = "";
-                    foreach ($arr_diff as $value) {
-                        $value = mysqli_real_escape_string($link,$value);
-                        $param .= "'$value',";
-                    }
-                    $param = trim($param,",");
-                    $sql_sel = "SELECT * from tag WHERE name in ($param)";
-                    $res = mysqli_query($link,$sql_sel);
-                    if($res && mysqli_affected_rows($link)>0){
-                        $diffTags = array();
-                        while($row = mysqli_fetch_array($res,MYSQLI_BOTH)){
-                            $diffTags[] = $row;
-                        }
-                    } else {
-                        mysqli_rollback($link);
-                        echo "rollback";
-                        echo "<script>alert('添加失败:error03');window.location.href='../admin/add.php';</script>";
-                        exit;
-                    }
+                resCheck($res,$link,'添加失败:error03','../admin/add.php');
 
-                    //Find the same tags id & name
-                    foreach ($diffTags as $value) {
-                        $arr_id[] = $value['id'];
-                        $arr_name[] = $value['name'];
-                    }
-                } else {
-                    mysqli_rollback($link);
-                    echo "<script>alert('添加失败:error04');window.location.href='../admin/add.php';</script>";
-                    exit;
+                //Select diff tags id 
+                $param = "";
+                foreach ($arr_diff as $value) {
+                    $value = mysqli_real_escape_string($link,$value);
+                    $param .= "'$value',";
+                }
+                $param = trim($param,",");
+                $sql_sel = "SELECT * from tag WHERE name in ($param)";
+                $res = mysqli_query($link,$sql_sel);
+                resCheck($res,$link,'添加失败:error04','../admin/add.php');
+
+                $diffTags = array();
+                while($row = mysqli_fetch_array($res,MYSQLI_BOTH)){
+                    $diffTags[] = $row;
+                }
+
+                //Find the same tags id & name
+                foreach ($diffTags as $value) {
+                    $arr_id[] = $value['id'];
+                    $arr_name[] = $value['name'];
                 }
             }
 
@@ -175,14 +160,9 @@
             $sql_mid = trim($sql_mid,",");
             $res = mysqli_query($link,$sql_mid);
 
-            if (!$res) {
-                mysqli_rollback($link);
-                echo "<script>alert('添加失败:error05');window.location.href='../admin/add.php';</script>";
-                exit;
-            }
+            resCheck($res,$link,'添加失败:error05','../admin/add.php');
             
             if (!mysqli_commit($link)) {
-                mysqli_rollback($link);
                 echo "<script>alert('添加失败:error06');window.location.href='../admin/add.php';</script>";
                 exit;
             } else {
@@ -192,7 +172,7 @@
 			break;
 
 		//修改文章
-		case 'edit':
+		case "edit":
 			loginCheck();
 
 			//Null check
@@ -230,7 +210,7 @@
             // 1:Select * from tag_mid 
             $sql_midS = "SELECT * from tag_mid where article_id = '{$article_id}' ";
             $res = mysqli_query($link,$sql_midS);
-            resCheck($res,$link,'添加失败:error01','../admin/edit.php?id={$article_id}');
+            resCheck($res,$link,'修改失败:error01','../admin/edit.php?id={$article_id}');
             $midTags = array();
             $midTags_id = array();
             while($row = mysqli_fetch_array($res,MYSQLI_BOTH)){
@@ -243,14 +223,14 @@
             // 2:Update1: article
             $sql = "UPDATE article set title='$title',formaltext='$ftext',`column`='$column' where id='$article_id';";
             $res = mysqli_query($link,$sql);
-            resCheck($res,$link,'添加失败:error02','../admin/edit.php?id=$article_id');
+            resCheck($res,$link,'修改失败:error02','../admin/edit.php?id=$article_id');
 
             // 3:Delete or get old tags
             if (empty($tags_get)) {
                 // 3.1:If empty tags, delete all in tag_mid, finish.
                 $sql = "DELETE from tag_mid where article_id = $article_id";
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error031','../admin/edit.php?id=$article_id');
+                resCheck($res,$link,'修改失败:error031','../admin/edit.php?id=$article_id');
             } else {
                 // 3.2:If have tags, select in all tags ,match the same 
                 $param = "";
@@ -260,7 +240,7 @@
                 $param = trim($param,",");
                 $sql = "SELECT * from tag WHERE name in ($param)";
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error032','../admin/edit.php?id=$article_id');
+                resCheck($res,$link,'修改失败:error032','../admin/edit.php?id=$article_id');
                 $sameTags = array();
                 while($row = mysqli_fetch_array($res)){
                     $sameTags[] = $row;
@@ -280,7 +260,7 @@
                     $param = trim($param,",");
                     $sql = "SELECT * from tag WHERE id in ($param)";
                     $res = mysqli_query($link,$sql);
-                    resCheck($res,$link,'添加失败:error033','../admin/edit.php?id=$article_id');
+                    resCheck($res,$link,'修改失败:error033','../admin/edit.php?id=$article_id');
                     $oldTags = array();
                     while($row = mysqli_fetch_array($res)){
                         $oldTags[] = $row;
@@ -295,10 +275,10 @@
                 }
                 
 
-                $arr_insert = array_diff($tags_get, $tags_original); //insert
-                $arr_delete = array_diff($tags_original, $tags_get); //delete
-                $arr_real_insert = array_diff($arr_insert, $arr_name); //delete
-                $arr_real_delete = array_diff($arr_delete, $arr_name); //delete
+                $arr_insert = array_diff($tags_get, $tags_original); 
+                $arr_delete = array_diff($tags_original, $tags_get); 
+                $arr_real_insert = array_diff($arr_insert, $arr_name); 
+                $arr_real_delete = array_diff($arr_delete, $arr_name); 
 
                 // var_dump($arr_insert);
                 // var_dump($arr_real_insert);
@@ -321,7 +301,7 @@
                     }
                     $sql = trim($sql,",");
                     $res = mysqli_query($link,$sql);
-                    resCheck($res,$link,'添加失败:error041','../admin/edit.php?id={$article_id}');
+                    resCheck($res,$link,'修改失败:error041','../admin/edit.php?id={$article_id}');
                 }
 
                 //Select diff tags id 
@@ -332,7 +312,7 @@
                 $param = trim($param,",");
                 $sql = "SELECT * from tag WHERE name in ($param)";
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error042','../admin/edit.php?id={$article_id}');
+                resCheck($res,$link,'修改失败:error042','../admin/edit.php?id={$article_id}');
                 $diffTags = array();
                 while($row = mysqli_fetch_array($res,MYSQLI_BOTH)){
                     $diffTags[] = $row;
@@ -355,7 +335,7 @@
                 $sql = trim($sql,",");
                 $sql = mysqli_real_escape_string($link,$sql);
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error043','../admin/edit.php?id=$article_id');
+                resCheck($res,$link,'修改失败:error043','../admin/edit.php?id=$article_id');
             }
 
             // 5:Delete
@@ -368,7 +348,7 @@
                 $param = trim($param,",");
                 $sql = "SELECT * from tag WHERE name in ($param)";
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error051','../admin/edit.php?id={$article_id}');
+                resCheck($res,$link,'修改失败:error051','../admin/edit.php?id={$article_id}');
                 $diffTags = array();
                 while($row = mysqli_fetch_array($res,MYSQLI_BOTH)){
                     $diffTags[] = $row;
@@ -388,16 +368,16 @@
                 $param = trim($param,",");
                 $sql = "DELETE from tag_mid where tag_id in ($param) and article_id = $article_id";
                 $res = mysqli_query($link,$sql);
-                resCheck($res,$link,'添加失败:error052','../admin/edit.php?id={$article_id}');
+                resCheck($res,$link,'修改失败:error052','../admin/edit.php?id={$article_id}');
             }
 
-            resCheck(mysqli_commit($link),$link,'添加失败:error05','../admin/edit.php?id={$article_id}');
-            echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
+            resCheck(mysqli_commit($link),$link,'修改失败:error05','../admin/edit.php?id={$article_id}');
+            echo "<script>alert('修改成功');window.location.href='../admin/index.php';</script>";
 
 			break;
 
 		//删除文章
-		case 'delete':
+		case "delete":
 			loginCheck();
 
             //Null id check
@@ -426,7 +406,7 @@
 			break;
 
 		//添加标签
-		case 'addTag':
+		case "addTag":
 			loginCheck();
 
             if (!isset($_POST['articleId']) || !isset($_POST['id'])) {
@@ -459,7 +439,7 @@
 			break;
 		
 		//删除标签
-		case 'reduceTag':
+		case "reduceTag":
 			loginCheck();
 
             if (!isset($_POST['articleId']) || !isset($_POST['id'])) {
@@ -502,7 +482,7 @@
 			break;
 
 		//添加新标签
-		case 'newTag':
+		case "newTag":
 			loginCheck();
 
             if (!isset($_POST['text']) || !isset($_POST['id'])) {
