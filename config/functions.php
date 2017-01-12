@@ -173,7 +173,7 @@
 
 		//修改文章
 		case "edit":
-			loginCheck();
+			$user_id = loginCheck();
 
 			//Null check
 			if (!isset($_POST["title"]) || !isset($_POST["formaltext"])) {
@@ -204,6 +204,14 @@
 			    exit;
 			}
 
+            // User check
+            $sql = "SELECT * from article where id = $article_id and user_id = $user_id";
+            $res = mysqli_query($link,$sql);
+            if (!$res && mysqli_affected_rows($link) == 0) {
+                echo "<script>alert('Illegal user operation!');window.location.href='../admin/index.php';</script>";
+                exit;
+            }
+            
             // All checks finished, mysql start.
             mysqli_autocommit($link,FALSE);
 
