@@ -6,9 +6,9 @@
 <?php 
 	//判断用户是否登录
 	session_start();
-	if(!isset($_SESSION['user'])){
+	if(!isset($_SESSION['uid'])){
 		echo "<script>alert('请登录');window.location.href='./login.php';</script>";
 	} else {
-        $user_id = $_SESSION['user'];
+        $user_id = $_SESSION['uid'];
     }
  ?>

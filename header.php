@@ -5,10 +5,10 @@
 
 	//checkout user
 	session_start();
-	if(!isset($_SESSION['user'])){
+	if(!isset($_SESSION['uid'])){
 		echo "<script>alert('请登录');window.location.href='./admin/login.php';</script>";
 	} else {
-        $user_id = $_SESSION['user'];
+        $user_id = $_SESSION['uid'];
     }
 
 	//查询 遍历所有导航栏

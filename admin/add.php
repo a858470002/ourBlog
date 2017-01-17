@@ -13,6 +13,15 @@
 			border: 1px;
 			background: grey;
 		}
+		#formaltext {
+			width: 80%;
+			height: 500px;
+			overflow-y: scroll;
+			resize: none;
+		}
+		#url {
+			width: 40%;
+		}
 	</style>
 </head>
 <body>
@@ -50,19 +59,21 @@
 			</select>
 			<br><br>
 			<input id="title" type="text" name="title" placeholder="标题" style="width: 40%;">
+			<input type="button" onclick="insertLink()" value="插入链接" />
+			<input type="button" onclick="deleteLink()" value="取消插入" />
 			<br><br>
-			<textarea id="formaltext" name="formaltext" placeholder="正文" style="width: 80%;height: 500px;overflow-y: scroll;resize: none;"></textarea>
+			<textarea id="formaltext" name="formaltext" placeholder="正文"></textarea>
+			<input id="url" type="text" name="link" placeholder="链接" style="display: none;">
 			<br><br>
 			<input id="tags" type='text' name='tag' placeholder='添加标签' >Use "," to split tag, it's impossible to use more than 32 char.
 			<br><br>
-			<button onclick="check()" type="button">提交</button>
-			<input type="button" onclick="link()" value="插入链接" />
+			<button onclick="checkNull()" type="button">提交</button>
 		</form>
 	</div>
 </body>
 	<script type="text/javascript">
 		//提交时check是否为空
-		function check(){
+		function checkNull(){
 			//获取栏目
 			var column = document.getElementById('column');
 			var selected = column.selectedIndex;
@@ -84,31 +95,17 @@
 			}
 		}
 
-		//加入链接
-		function link(){
-			var textarea = document.getElementById('formaltext');
-			var value = "<a href='http://请在这里输入url'>请在这里输入文本</a>";
-			insertAtCursor(textarea,value);
+		function insertLink() {
+			document.getElementById("formaltext").setAttribute("style","display:none");
+			document.getElementById("formaltext").value = "";
+			document.getElementById('url').setAttribute("style","display:block");
 		}
 
-		//获取textbox的光标，并把新内容加上去
-		function insertAtCursor(myField, myValue) {
-			if (myField.selectionStart || myField.selectionStart == '0') {
-				var startPos = myField.selectionStart;
-				var endPos = myField.selectionEnd;
-				// save scrollTop before insert 
-				var restoreTop = myField.scrollTop;
-				myField.value = myField.value.substring(0, startPos) + myValue + myField.value.substring(endPos, myField.value.length);
-				if (restoreTop > 0) {
-					myField.scrollTop = restoreTop;
-				}
-				myField.focus();
-				myField.selectionStart = startPos + myValue.length;
-				myField.selectionEnd = startPos + myValue.length;
-			} else {
-				myField.value += myValue;
-				myField.focus();
-			}
+		function deleteLink() {
+			document.getElementById("formaltext").setAttribute("style","display:block");
+			document.getElementById('url').setAttribute("style","display:none");
+			document.getElementById('url').value = "";
 		}
+
 	</script>
 </html>
