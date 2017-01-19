@@ -2,7 +2,7 @@
 
 //PDO Connection
 function PDOStart() {
-    $dsn      = 'mysql:dbname=blog;host=127.0.0.1;charset=utf8';
+    $dsn      = 'mysql:dbname=blog_test;host=127.0.0.1;charset=utf8';
     $user     = 'root';
     $password = '123456';
 

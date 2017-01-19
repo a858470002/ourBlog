@@ -3,8 +3,11 @@
 function login ($data,$dbh)
 {
     //Param check
-    if (!isset($data['email']) || !isset($data['password'])) {
-        throw new InvalidArgumentException('Invalid Email or Password!');
+    if (!isset($data['email'])) {
+        throw new InvalidArgumentException('Miss reuqire key: Email');
+    }
+    if (!isset($data['password'])) {
+        throw new InvalidArgumentException('Miss reuqire key: Password');
     }
     if (empty($data['email'])) {
         throw new InvalidArgumentException('Please fill the email');
@@ -13,7 +16,7 @@ function login ($data,$dbh)
         throw new InvalidArgumentException('Please fill the password');
     }
 
-    $email = filter_var(($data['email']),FILTER_VALIDATE_EMAIL);
+    $email    = filter_var(($data['email']),FILTER_VALIDATE_EMAIL);
     $password = md5($data['password']);
 
     if (!$email) {
@@ -27,11 +30,12 @@ function login ($data,$dbh)
     $sth->execute();
 
     if ($sth->rowCount()==0) {
-        throw new InvalidArgumentException("Incorrect Email or Password!");
+        return False;
+    } else {
+        $user = $sth->fetch();
+        return $user['id'];
     }
-    $user = $sth->fetch();
-
-    return $user['id'];
+    
 }
 
 function addArticle ($data,$dbh,$user_id) 
@@ -39,7 +43,7 @@ function addArticle ($data,$dbh,$user_id)
     $requiredKeys = array('column', 'title', 'formaltext', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
-            throw new InvalidArgumentException('missing requied key $key');
+            throw new InvalidArgumentException('Missing requied key $key');
         }
     }
     $title = trim($data['title']);
@@ -136,17 +140,21 @@ function addArticle ($data,$dbh,$user_id)
         $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
         $sth->execute();
 
+    }
+
+    if (!empty($tags)) {
         // 4.Select diff tags id 
         $param = '';
-        foreach ($arr_diff as $value) {
+        foreach ($tags as $value) {
             $param .= $dbh->quote($value) . ',';
         }
         $param = trim($param,",");
-
-        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
-        $sth->execute();
+        $sql = "SELECT * from tag WHERE name in ($param)";
+        $sth = $dbh->query($sql);
         $diffTags = $sth->fetchAll();
 
+        $arr_id   = array();
+        $arr_name = array();
         //Find the same tags id & name
         foreach ($diffTags as $value) {
             $arr_id[] = $value["id"];
@@ -159,6 +167,7 @@ function addArticle ($data,$dbh,$user_id)
             $value = $dbh->quote($value);
             $sqlValues .= "($value,'$article_id'),";
         }
+
         $sqlValues = trim($sqlValues,",");
         $sth = $dbh->prepare("INSERT into tag_mid(tag_id,article_id) VALUES $sqlValues");
         $sth->execute();

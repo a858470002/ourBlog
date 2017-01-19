@@ -11,6 +11,7 @@
         header("Location: /admin/index.php");
         exit;
     }
+    $dbh=PDOStart();
     
     switch ($action) {
         //登录判断
@@ -53,7 +54,7 @@
             try {
                 editArticle($_POST,$dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
+                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/edit.php'</script>";
                 exit;
             }
 
@@ -69,7 +70,10 @@
             try {
                 deleteArticle($dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
+                echo $e->getMessage();
+                // var_dump($e->getMessage());
+                die;
+                echo "<script>alert(".$e->getMessage().");window.location.href='../admin/index.php'</script>";
                 exit;
             }
 

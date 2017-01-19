@@ -13,11 +13,8 @@
 
 	//查询 遍历所有导航栏
 	$sql = "select * from types;";
-	$res = mysqli_query($link,$sql);
-	$types = array();
-	while($row = mysqli_fetch_array($res)){
-		$types[] = $row;
-	}
+	$sth = $dbh->query($sql);
+	$types = $sth->fetchAll();
 	foreach ($types as $value) {
 		echo "<a class='nav' href='./index.php?type={$value['id']}&user_id={$user_id}'>{$value['name']}</a>";
 	}

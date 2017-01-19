@@ -17,11 +17,9 @@
 			} else {
 				$sql = "SELECT * from article";
 			}
-			$res = mysqli_query($link,$sql);
-			$article = array();
-			while ($row = mysqli_fetch_array($res)) {
-				$article[] = $row;
-			};
+
+			$sth = $dbh->query($sql);
+			$article = $sth->fetchAll();
 		?>
 		<!-- content -->
 		<?php 
