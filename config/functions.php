@@ -16,9 +16,12 @@
         //登录判断
         case "login":
             try {
-                $user_id = login($_POST,$link);
+                $user_id = login($_POST,$dbh);
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/login.php'</script>";
+                exit;
+            } catch (Exception $e) {
+                echo "System error";
                 exit;
             }
 
@@ -32,7 +35,7 @@
 			$user_id = loginCheck();
 
             try {
-                addArticle($_POST,$link,$user_id);
+                addArticle($_POST,$dbh,$user_id);
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
                 exit;
@@ -48,7 +51,7 @@
             $article_id = $_GET['id']; 
 
             try {
-                editArticle($_POST,$link,$user_id,$article_id);
+                editArticle($_POST,$dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
                 exit;
@@ -64,7 +67,7 @@
             $article_id = $_GET['id'];
 
             try {
-                deleteArticle($link,$user_id,$article_id);
+                deleteArticle($dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
                 exit;

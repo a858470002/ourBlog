@@ -1,13 +1,16 @@
 <?php
-	//define database config
-	@define(db_host,"localhost");
-	@define(db_user,"root");
-	@define(db_pass,"123456");
-	@define(db_name,"blog");
-	@define(db_charset,"utf8");
 
-	$link = mysqli_connect(db_host,db_user,db_pass) or die("mysql_connect failed!");
+//PDO Connection
+function PDOStart() {
+    $dsn      = 'mysql:dbname=blog_test;host=127.0.0.1';
+    $user     = 'root';
+    $password = '123456';
 
-	mysqli_select_db($link,db_name);
-
-	mysqli_set_charset($link,db_charset);
+    try {
+        $dbh = new PDO($dsn,$user,$password);
+        $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        echo 'Connect failed: ' . $e->getMessage();
+    }
+    return $dbh;
+}

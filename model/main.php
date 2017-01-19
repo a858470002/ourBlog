@@ -1,92 +1,112 @@
 <?php
 
-function login ($data,$link)
+function login ($data,$dbh)
 {
     //Param check
-    if (!isset($data["email"]) || !isset($data["password"])) {
-        throw new InvalidArgumentException("Invalid param");
+    if (!isset($data['email']) || !isset($data['password'])) {
+        throw new InvalidArgumentException('Invalid Email or Password!');
     }
-    paramCheck($data["email"]);
-    paramCheck($data["password"]);
+    if (empty($data['email'])) {
+        throw new InvalidArgumentException('Please fill the email');
+    }
+    if (empty($data['password'])) {
+        throw new InvalidArgumentException('Please fill the password');
+    }
 
-    $email = filter_var(($data["email"]),FILTER_VALIDATE_EMAIL);
-    $password = md5($data["password"]);
+    $email = filter_var(($data['email']),FILTER_VALIDATE_EMAIL);
+    $password = md5($data['password']);
 
-    //Email valid check
     if (!$email) {
-        throw new InvalidArgumentException("Illegal rules");
+        throw new InvalidArgumentException('Illegal Email address');
     }
-    $email = mysqli_real_escape_string($link,$email);
 
-    //User check
-    $sql = "SELECT * from user where `email`='$email' and password='$password' ";
-    $res = mysqli_query($link,$sql);
-    if (!$res || mysqli_affected_rows($link)==0) {
+    //PDO start
+    $sth = $dbh->prepare('SELECT * from user where `email` = :email and password = :password');
+    $sth->bindValue(':email',$email,PDO::PARAM_STR);
+    $sth->bindValue(':password',$password,PDO::PARAM_STR);
+    $sth->execute();
+
+    if ($sth->rowCount()==0) {
         throw new InvalidArgumentException("Incorrect Email or Password!");
     }
-    $user = mysqli_fetch_assoc($res);
+    $user = $sth->fetch();
 
     return $user['id'];
 }
 
-function addArticle ($data,$link,$user_id) 
+function addArticle ($data,$dbh,$user_id) 
 {
     $requiredKeys = array('column', 'title', 'formaltext', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
-            throw new InvalidArgumentException("missing requied key");
+            throw new InvalidArgumentException('missing requied key $key');
         }
     }
-    paramCheck($data["title"],64);
-    paramCheck($data["formaltext"],65535);
-    paramCheck($data["column"]);
-
-    if (!isset($data["tag"])) {
-        throw new InvalidArgumentException("Invalid param:Tag");
+    $title = trim($data['title']);
+    if (empty($title)) {
+        throw new InvalidArgumentException('Please fill the title');
+    }
+    if (empty($data['formaltext'])) {
+        throw new InvalidArgumentException('Please fill the formaltext');
     }
 
-    $column = filter_var($data["column"],FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+    $num = mb_strlen($title,"UTF-8");
+    if ($num > 64) {
+        throw new InvalidArgumentException('Title is over range(64)!');
+    }
 
-    //Valid check
+    $num = mb_strlen($data['formaltext'],"UTF-8");
+    if ($num > 65534) {
+        throw new InvalidArgumentException('Formaltext is over range(65535)!');
+    }
+    $formaltext = $data['formaltext'];
+
+    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
     if (!$column) {
-        throw new InvalidArgumentException("Invalid column");
+        throw new InvalidArgumentException('Column is invalid');
     }
-    $title = mysqli_real_escape_string($link,$data["title"]);
-    $ftext = mysqli_real_escape_string($link,$data["formaltext"]);
+    
 
-    if (!empty($data["tag"])) {
-        $tags = explode(",", $data["tag"]);
+    if (!empty($data['tag'])) {
+        $tags = explode(',', $data['tag']);
         foreach ($tags as $value) {
-            paramCheck($value,32);
+            $num = mb_strlen($value,"UTF-8");
+            if ($num > 32) {
+                throw new InvalidArgumentException('Some of tags is over range(64)!');
+            }
         }
     } else {
         $tags = array();
     }
 
-    //Data check finish, mysql start
-    mysqli_autocommit($link,FALSE);
 
-    // Insert1: new article
-    $sql = "INSERT into article(title,formaltext,`column`,user_id) VALUES ('$title','$ftext','$column',$user_id);";
-    $res = mysqli_query($link,$sql);
-    mysqliResultCheck($res,$link,"添加失败:error01");
+    $dbh->beginTransaction();
 
-    $article_id = mysqli_insert_id($link);
+    // 1.insert new article
+    $sth = $dbh->prepare("INSERT into article(title,formaltext,`column`,user_id) VALUES (:title,:ftext,:column,:user_id);");
+    $sth->bindValue(':title',$title,PDO::PARAM_STR);
+    $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
+    $sth->bindValue(':column',$column,PDO::PARAM_INT);
+    $sth->bindValue(':user_id',$user_id,PDO::PARAM_INT);
+    $sth->execute();
+
+    $article_id = $dbh->lastInsertId();
 
     // If have tags
     if (!empty($tags)) {
         // Select all tags ,match the same 
         $param = "";
         foreach ($tags as $value) {
-            $value = mysqli_real_escape_string($link,$value);
+            $value = $dbh->quote($value);
             $param .= "$value,";
         }
         $param = trim($param,",");
-        $sql_sel = "SELECT * from tag WHERE name in ('$param')";
-        $res = mysqli_query($link,$sql_sel);
-        mysqliResultCheck($res,$link,"添加失败:error02");
-        
-        $sameTags = mysqliArrayResult($res);
+
+        // 2.select tags which already have
+        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
+        $sth->execute();
+      
+        $sameTags = $sth->fetchAll();
         $arr_id   = array();
         $arr_name = array();
 
@@ -104,31 +124,28 @@ function addArticle ($data,$link,$user_id)
 
     //If appear new tags
     if (!empty($arr_diff)) {
-        // Insert2: new tag (match, and del the same tag)
+        // 3.insert new tag (match, and del the same tag)
         $user_id = intval($user_id);
-        $sql = "INSERT into tag(name,user_id) VALUES ";
-        foreach ($arr_diff as $value) {
-            $value = mysqli_real_escape_string($link,$value);
-            $sql .= "('$value',$user_id),";
-        }
-        $sql = trim($sql,",");
-        $res = mysqli_query($link,$sql);
-        // echo $sql."<br>";
-        mysqliResultCheck($res,$link,"添加失败:error03");
+        $sqlValues  = '';
 
-        //Select diff tags id 
-        $param = "";
+        foreach ($arr_diff as $v) {
+            $sqlValues .= "(".$dbh->quote($v).",$user_id),";
+        }
+        $sqlValues = trim($sqlValues,",");
+
+        $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
+        $sth->execute();
+
+        // 4.Select diff tags id 
+        $param = '';
         foreach ($arr_diff as $value) {
-            $value = mysqli_real_escape_string($link,$value);
-            $param .= "'$value',";
+            $param .= $dbh->quote($value) . ',';
         }
         $param = trim($param,",");
-        $sql = "SELECT * from tag WHERE name in ($param)";
-        $res = mysqli_query($link,$sql);
-        // echo $sql ;
-        mysqliResultCheck($res,$link,"添加失败:error04");
 
-        $diffTags = mysqliArrayResult($res);
+        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
+        $sth->execute();
+        $diffTags = $sth->fetchAll();
 
         //Find the same tags id & name
         foreach ($diffTags as $value) {
@@ -136,27 +153,23 @@ function addArticle ($data,$link,$user_id)
             $arr_name[] = $value["name"];
         }
         
-        // Insert3: new tag & article (table tag_mid)
-        $sql_mid = "INSERT into tag_mid(tag_id,article_id) VALUES ";
+        // 5.insert new tag & article (table tag_mid)
+        $sqlValues = '';
         foreach ($arr_id as $value) {
-            $value = mysqli_real_escape_string($link,$value);
-            $sql_mid .= "($value,'$article_id'),";
+            $value = $dbh->quote($value);
+            $sqlValues .= "($value,'$article_id'),";
         }
-        $sql_mid = trim($sql_mid,",");
-        $res = mysqli_query($link,$sql_mid);
-
-        mysqliResultCheck($res,$link,"添加失败:error05");
+        $sqlValues = trim($sqlValues,",");
+        $sth = $dbh->prepare("INSERT into tag_mid(tag_id,article_id) VALUES $sqlValues");
+        $sth->execute();
     }
 
-    
-    if (!mysqli_commit($link)) {
-        throw new InvalidArgumentException("添加失败:error06");
-    }
+    $dbh->commit();
 
     return true;
 }
 
-function editArticle ($data,$link,$user_id,$article_id) 
+function editArticle ($data,$dbh,$user_id,$article_id) 
 {
     $requiredKeys = array('column', 'title', 'formaltext', 'tag');
     foreach ($requiredKeys as $key) {
@@ -165,95 +178,116 @@ function editArticle ($data,$link,$user_id,$article_id)
             
         }
     }
-    paramCheck($data["title"],64);
-    paramCheck($data["formaltext"],65535);
-    paramCheck($data["column"]);
+    $title      = trim($data['title']);
+    $formaltext = $data['formaltext'];
 
-    $column = filter_var($data["column"],FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+    // Empty
+    if (empty($title)) {
+        throw new InvalidArgumentException('Please fill the title');
+    }
+    if (empty($formaltext)) {
+        throw new InvalidArgumentException('Please fill the formaltext');
+    }
+
+    // Length
+    $num = mb_strlen($title,"UTF-8");
+    if ($num > 64) {
+        throw new InvalidArgumentException('Title is over range(64)!');
+    }
+
+    $num = mb_strlen($formaltext,"UTF-8");
+    if ($num > 65534) {
+        throw new InvalidArgumentException('Formaltext is over range(65535)!');
+    }
+
+    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+    if (!$column) {
+        throw new InvalidArgumentException('Column is invalid');
+    }
     $article_id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
 
     if (!empty($data["tag"])) {
-        $tags_get = explode(",", $data["tag"]);
+        $tags_get = explode(',', $data['tag']);
         foreach ($tags_get as $value) {
-            paramCheck($value,32);
+            $num = mb_strlen($value,"UTF-8");
+            if ($num > 32) {
+                throw new InvalidArgumentException('Some of tags is over range(64)!');
+            }
         }
     } else {
         $tags_get = array();
     }
 
-    $title = mysqli_real_escape_string($link,$data["title"]);
-    $ftext = mysqli_real_escape_string($link,$data["formaltext"]);
+    // PDO Start
 
     // User check
-    $sql = "SELECT * from article where id = $article_id and user_id = $user_id";
-    $res = mysqli_query($link,$sql);
-    if ($num = mysqli_num_rows($res) == 0) {
-        throw new InvalidArgumentException("Illegal user operation!$num");
+    $sql = "SELECT count(*) from article where id = $article_id and user_id = $user_id";
+    $result = $dbh->query($sql)->fetchColumn();
+
+    if ($result == 0) {
+        throw new InvalidArgumentException("Illegal user operation!");
     }
-    
-    // All checks finished, mysql start.
-    mysqli_autocommit($link,FALSE);
 
     // 1:Select * from tag_mid 
-    $sql = "SELECT * from tag_mid where article_id = $article_id ";
-    $res = mysqli_query($link,$sql);
-    mysqliResultCheck($res,$link,"修改失败:error01");
+    $sth = $dbh->prepare("SELECT * from tag_mid where article_id = :article_id");
+    $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+    $sth->execute();
 
-    $midTags = mysqliArrayResult($res);
+    $midTags = $sth->fetchAll();
     $midTags_id = array();
 
     foreach ($midTags as $value) {
         $midTags_id[] = $value["tag_id"];
     }
 
+    $dbh->beginTransaction();
     // 2:Update1: article
-    $sql = "UPDATE article set title='$title',formaltext='$ftext',`column`='$column' where id=$article_id;";
-    $res = mysqli_query($link,$sql);
-    mysqliResultCheck($res,$link,"修改失败:error02");
+    $sth = $dbh->prepare("UPDATE article set title = :title,formaltext = :ftext,`column` = :column where id=:article_id");
+    $sth->bindValue(':title',$title,PDO::PARAM_STR);
+    $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
+    $sth->bindValue(':column',$column,PDO::PARAM_INT);
+    $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+    $sth->execute();
 
     // 3:Delete or get old tags
     if (empty($tags_get)) {
         // 3.1:If empty tags, delete all in tag_mid, finish.
-        $sql = "DELETE from tag_mid where article_id = $article_id";
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error031");
+        $sth = $dbh->prepare("DELETE from tag_mid where article_id = :article_id");
+        $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+        $sth->execute();
     } else {
         // 3.2:If have tags, select in all tags ,match the same 
         $param = "";
         foreach ($tags_get as $value) {
-            $tname = mysqli_real_escape_string($link,$value);
-            $param .= "'$tname',";
+            $param .= $dbh->quote($value).",";
         }
         $param = trim($param,",");
-        $sql = "SELECT * from tag WHERE name in ($param)";
-        // echo "\n".$sql."\n";
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error032");
+        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
+        $sth->bindValue(':article_id',$article_id,PDO::PARAM_STR);
+        $sth->execute();
 
-        $sameTags = mysqliArrayResult($res);
+        $sameTags = $sth->fetchAll();
         $arr_id = array();
         $arr_name = array();
+
         //Get the old tags id & name
         foreach ($sameTags as $value) {
             $arr_id[] = $value["id"];
             $arr_name[] = $value["name"];
         }
-        // var_dump($sameTags);die;
 
         if (!empty($midTags_id)) {
             $param = "";
             foreach ($midTags_id as $value) {
-                $param .= "'$value',";
+                $param .= $dbh->quote($value).",";
             }
             $param = trim($param,",");
-            $sql = "SELECT * from tag WHERE id in ($param)";
-            $res = mysqli_query($link,$sql);
-            mysqliResultCheck($res,$link,"修改失败:error033");
+            $sth = $dbh->prepare("SELECT * from tag WHERE id in ($param)");
+            $sth->bindValue(':article_id',$article_id,PDO::PARAM_STR);
+            $sth->execute();
 
             $oldTags = array();
-            while($row = mysqli_fetch_array($res)){
-                $oldTags[] = $row;
-            }
+            $oldTags = $sth->fetchAll();
             
             //Get the old tags id & name
             foreach ($oldTags as $value) {
@@ -274,29 +308,24 @@ function editArticle ($data,$link,$user_id,$article_id)
     // 4:Insert
     if (!empty($arr_insert)) {
         if (!empty($arr_real_insert)) {
-            $sql = "INSERT into tag(name) VALUES ";
+            $sqlValues = '';
             foreach ($arr_real_insert as $value) {
-                $tname = mysqli_real_escape_string($link,$value);
-                $sql .= "('$tname'),";
+                $sqlValues .= "(".$dbh->quote($value)."),";
             }
-            $sql = trim($sql,",");
-            $res = mysqli_query($link,$sql);
-            mysqliResultCheck($res,$link,"修改失败:error041");
+            $sqlValues = trim($sqlValues,",");
+            $sth = $dbh->prepare("INSERT into tag(name) VALUES $sqlValues");
+            $sth->execute();
         }
 
         //Select diff tags id 
         $param = "";
         foreach ($arr_insert as $value) {
-            $tname = mysqli_real_escape_string($link,$value);
-            $param .= "'$tname',";
+            $param .= $dbh->quote($value).",";
         }
         $param = trim($param,",");
-        $sql = "SELECT * from tag WHERE name in ($param)";
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error042");
-
-        $diffTags = mysqliArrayResult($res);
-        
+        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
+        $sth->execute();
+        $diffTags = $sth->fetchAll();
 
         //Find the same tags id & name
         foreach ($diffTags as $value) {
@@ -305,29 +334,26 @@ function editArticle ($data,$link,$user_id,$article_id)
         }
         
         // Insert3: new tag & article (table tag_mid)
-        $sql = "INSERT into tag_mid(tag_id,article_id) VALUES ";
+        $sqlValues = '';
         foreach ($arr_id_insert as $value) {
-            $sql .= "($value,$article_id),";
+            $sqlValues .= "($value,$article_id),";
         }
-        $sql = trim($sql,",");
-        $sql = mysqli_real_escape_string($link,$sql);
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error043");
+        $sqlValues = trim($sqlValues,",");
+        $sth = $dbh->prepare("INSERT into tag_mid(tag_id,article_id) VALUES $sqlValues");
+        $sth->execute();
     }
 
     // 5:Delete
     if (!empty($arr_delete)) {
         //Select diff tags id 
-        $param = "";
+        $param = '';
         foreach ($arr_delete as $value) {
-            $param .= "'$value',";
+            $param .= $dbh->quote($value).',';
         }
-        $param = trim($param,",");
-        $sql = "SELECT * from tag WHERE name in ($param)";
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error051");
-
-        $diffTags = mysqliArrayResult($res);
+        $param = trim($param,',');
+        $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
+        $sth->execute();
+        $diffTags = $sth->fetchAll();
 
         //Put id & name into array
         foreach ($diffTags as $value) {
@@ -336,90 +362,42 @@ function editArticle ($data,$link,$user_id,$article_id)
         }
 
         // Delete: new tag & article (table tag_mid)
-        $param = "";
+        $param = '';
         foreach ($arr_id_delete as $value) {
-            $param .= "'$value',";
+            $param .= $dbh->quote($value).',';
         }
-        $param = trim($param,",");
-        $sql = "DELETE from tag_mid where tag_id in ($param) and article_id = $article_id";
-        $res = mysqli_query($link,$sql);
-        mysqliResultCheck($res,$link,"修改失败:error052");
+        $param = trim($param,',');
+        $sth = $dbh->prepare("DELETE from tag_mid where tag_id in ($param) and article_id = $article_id");
+        $sth->execute();
     }
 
-    mysqliResultCheck(mysqli_commit($link),$link,"修改失败:error05");
+    $dbh->commit();
 
     return true;
 }
 
-function deleteArticle ($link,$user_id,$article_id) 
+function deleteArticle ($dbh,$user_id,$article_id) 
 {
-    paramCheck($article_id);
-
     //Valid id check
-    $id = filter_var(($article_id),FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
     $user_id = filter_var($user_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+    $id = filter_var(($article_id),FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
     if (!$id || !$user_id) {
-        throw new InvalidArgumentException("Ivalid rules");
+        throw new InvalidArgumentException("Illegal operation");
     }
     
-    //Delete article
-    $sql = "DELETE from article where id={$id} and user_id=$user_id";
-    $res = mysqli_query($link,$sql);
-    if ($res && mysqli_affected_rows($link)==1) {
-        return true;
-    } else {
-        throw new InvalidArgumentException("The article don\'t exist or incorrect user");
-    }
-}
-
-function paramCheck ($param,$length = null) 
-{
-    //empty check
-    if (empty($param)) {
-        throw new InvalidArgumentException("Please fill the blank");
-    }
-
-    //length check
-    if ($length != null) {
-        $num = mb_strlen(trim($param),"UTF-8");
-        if ($num == 0 || $num > $length) {
-            throw new InvalidArgumentException("Illegal param length");
+    $sql = "SELECT * from article where id = $id ";
+    $result = $dbh->query($sql)->fetchColumn();
+    if ($result == 1) {
+        //Delete article
+        $sql = "DELETE from article where id=$id and user_id=$user_id";
+        $result = $dbh->query($sql)->rowCount();
+        if ($result == 0) {
+            throw new InvalidArgumentException("Delete failed: incorrect user");
+        } else {
+            return true;
         }
-    }
-}
-
-function mysqliResultCheck ($res,$link,$string)
-{
-    if (!$res) {
-        mysqli_rollback($link);
-        throw new InvalidArgumentException("$string");
-    }
-}
-
-function mysqliArrayResult ($res) 
-{
-    $array = array();
-    while($row = mysqli_fetch_array($res)){
-        $array[] = $row;
-    }
-
-    return $array;
-}
-
-function databaseConnect ($dbname)
-{
-    //数据库基本信息
-    $dbhost = "127.0.0.1";
-    $dbuser = "root";
-    $dbpwd  = "123456";
-    // $dbname = "php_manual";
-    
-    //MySQLi链接
-    $mysqli = new mysqli($dbhost,$dbuser,$dbpwd,$dbname);
-    if(mysqli_connect_errno()){
-        return "连接失败".mysqli_connect_error();
-        exit;
     } else {
-        return $mysqli;
+        throw new InvalidArgumentException("Delete failed: article don't exist");
+        
     }
 }
