@@ -319,10 +319,10 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if (!empty($arr_real_insert)) {
             $sqlValues = '';
             foreach ($arr_real_insert as $value) {
-                $sqlValues .= "(".$dbh->quote($value)."),";
+                $sqlValues .= "(".$dbh->quote($value).",$user_id),";
             }
             $sqlValues = trim($sqlValues,",");
-            $sth = $dbh->prepare("INSERT into tag(name) VALUES $sqlValues");
+            $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
             $sth->execute();
         }
 
@@ -402,9 +402,10 @@ function deleteArticle ($dbh,$user_id,$article_id)
         $result = $dbh->query($sql)->rowCount();
         if ($result == 0) {
             throw new InvalidArgumentException("Delete failed: incorrect user");
-        } else {
-            return true;
         }
+
+        $sql = "DELETE from tag_mid where article_id=$id ";
+        $result = $dbh->query($sql)->rowCount();
     } else {
         throw new InvalidArgumentException("Delete failed: article don't exist");
         
