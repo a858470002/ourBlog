@@ -40,6 +40,9 @@
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
                 exit;
+            } catch (Exception $e) {
+                echo $e->getMessage();
+                exit;
             }
 
             echo "<script>alert('添加成功');window.location.href='../admin/index.php';</script>";
@@ -55,6 +58,9 @@
                 editArticle($_POST,$dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
                 echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/edit.php'</script>";
+                exit;
+            } catch (Exception $e) {
+                echo $e->getMessage();
                 exit;
             }
 
@@ -74,6 +80,9 @@
                 // var_dump($e->getMessage());
                 die;
                 echo "<script>alert(".$e->getMessage().");window.location.href='../admin/index.php'</script>";
+                exit;
+            } catch (Exception $e) {
+                echo $e->getMessage();
                 exit;
             }
 
