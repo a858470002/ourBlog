@@ -15,11 +15,8 @@
 			$id = $_GET['id'];
 
 			//查询对应id的文章
-			$sql = "select * from article where id={$id}";
-			$res = mysqli_query($link,$sql);
-			if($res && mysqli_num_rows($res)>0){
-				$data = mysqli_fetch_assoc($res);
-			}
+			$sql = "SELECT * from article where id=$id";
+			$data = $dbh->query($sql)->fetch();
 		?>
 		<!-- content -->
 		<div style="width: 100%;">

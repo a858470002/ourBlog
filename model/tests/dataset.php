@@ -8,7 +8,8 @@ function arrset() {
                     "formaltext" => "wojiushi zhengwen",
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null
+                    "link"       => null,
+                    "is_link"    => 0
                     ),
                 array(
                     "id"         => 2,
@@ -16,7 +17,8 @@ function arrset() {
                     "formaltext" => "testFormaltext", 
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null
+                    "link"       => null,
+                    "is_link"    => 0
                 )
             ),
             "tag"=>array(
@@ -56,7 +58,8 @@ function arrset2() {
                     "formaltext" => "wojiushi zhengwen",
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null
+                    "link"       => null,
+                    "is_link"    => 0
                     ),
                 array(
                     "id"         => 2,
@@ -64,7 +67,8 @@ function arrset2() {
                     "formaltext" => "testFormaltext", 
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null
+                    "link"       => null,
+                    "is_link"    => 0
                 )
             ),
             "tag"=>array(

@@ -25,7 +25,10 @@
                 echo "System error";
                 exit;
             }
-
+            if ($user_id == False) {
+                echo "<script>alert('用户名或密码错误');window.location.href='../admin/login.php'</script>";
+                exit;
+            }
             $_SESSION['uid'] = $user_id;
             session_regenerate_id();
             header('Location: /admin/index.php'); 

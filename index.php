@@ -24,8 +24,15 @@
 		<!-- content -->
 		<?php 
 			foreach ($article as $value) {
+				if ($value['is_link'] == 0) {
+					$href = "./content.php?id=".$value['id'];
+					$link = "";
+				} else {
+					$href = $value['link'];
+					$link = "<sup title='It is a link'>[link]</sup>";
+				}
 				echo "<ul>
-						<li><a href='./content.php?id={$value['id']}'>{$value['title']}</a></li>
+						<li><a href=$href>{$value['title']}</a>$link</li>
 					</ul>";
 			}
 		 ?>

@@ -7,7 +7,7 @@ function login ($data,$dbh)
         throw new InvalidArgumentException('Miss reuqire key: Email');
     }
     if (empty($data['email'])) {
-        throw new InvalidArgumentException('Please fill the email');
+        throw new InvalidArgumentException('Please fill the Email');
     }
     $email = filter_var(($data['email']),FILTER_VALIDATE_EMAIL);
     if (!$email) {
@@ -37,7 +37,7 @@ function login ($data,$dbh)
 
 function addArticle ($data,$dbh,$user_id) 
 {
-    $requiredKeys = array('column', 'title', 'formaltext', 'tag');
+    $requiredKeys = array('title', 'formaltext', 'column', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("Missing requied key $key");
@@ -47,20 +47,28 @@ function addArticle ($data,$dbh,$user_id)
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
     }
-    $num = mb_strlen($title,"UTF-8");
-    if ($num > 64) {
+    $length = mb_strlen($title,'UTF-8');
+    if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
-
-    if (empty($data['formaltext'])) {
-        throw new InvalidArgumentException('Please fill the formaltext');
+    
+    if (!isset($data['link'])) {
+        $link = null;
+    } else {
+        $link = $data['link'];
     }
     $formaltext = $data['formaltext'];
-    $num = mb_strlen($formaltext,"UTF-8");
-    if ($num > 65534) {
+    if (empty($formaltext) && empty($link)) {
+        throw new InvalidArgumentException('Please fill the formaltext or set a link');
+    }
+    if (!empty($formaltext) && !empty($link)) {
+        throw new InvalidArgumentException('One of argument(formaltext, link) must be empty');
+    }
+    empty($link) ? $is_link = 0 : $is_link = 1;
+    $length  = mb_strlen($formaltext,'UTF-8');
+    if ($length > 65534) {
         throw new InvalidArgumentException('Formaltext is over range(65535)!');
     }
-
     $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
     if (!$column) {
         throw new InvalidArgumentException('Column is invalid');
@@ -69,11 +77,11 @@ function addArticle ($data,$dbh,$user_id)
     if (!empty($data['tag'])) {
         $tags = explode(',', $data['tag']);
         if (count($tags)>=10) {
-            throw new InvalidArgumentException("Don't use over 10 tags");
+            throw new InvalidArgumentException('Don\'t use over 10 tags');
         }
         foreach ($tags as $value) {
-            $num = mb_strlen($value,"UTF-8");
-            if ($num > 32) {
+            $length = mb_strlen($value,'UTF-8');
+            if ($length > 32) {
                 throw new InvalidArgumentException('Some of tags is over range(32)!');
             }
         }
@@ -85,11 +93,13 @@ function addArticle ($data,$dbh,$user_id)
 
     try {
         // 1.insert new article
-        $sth = $dbh->prepare("INSERT into article(title,formaltext,`column`,user_id) VALUES (:title,:ftext,:column,:user_id);");
+        $sth = $dbh->prepare("INSERT into article(title,formaltext,`column`,user_id,link,is_link) VALUES (:title,:ftext,:column,:user_id,:link,:is_link);");
         $sth->bindValue(':title',$title,PDO::PARAM_STR);
         $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
         $sth->bindValue(':column',$column,PDO::PARAM_INT);
         $sth->bindValue(':user_id',$user_id,PDO::PARAM_INT);
+        $sth->bindValue(':link',$link,PDO::PARAM_STR);
+        $sth->bindValue(':is_link',$is_link,PDO::PARAM_STR);
         $sth->execute();
 
         $article_id = $dbh->lastInsertId();
@@ -188,13 +198,13 @@ function editArticle ($data,$dbh,$user_id,$article_id)
             
         }
     }
-    $title      = trim($data['title']);
+    $title = trim($data['title']);
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
     }
 
-    $num = mb_strlen($title,"UTF-8");
-    if ($num > 64) {
+    $length = mb_strlen($title,"UTF-8");
+    if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
 
@@ -203,8 +213,8 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         throw new InvalidArgumentException('Please fill the formaltext');
     }
 
-    $num = mb_strlen($formaltext,"UTF-8");
-    if ($num > 65534) {
+    $length = mb_strlen($formaltext,"UTF-8");
+    if ($length > 65534) {
         throw new InvalidArgumentException('Formaltext is over range(65535)!');
     }
 
@@ -216,9 +226,12 @@ function editArticle ($data,$dbh,$user_id,$article_id)
 
     if (!empty($data["tag"])) {
         $tags_get = explode(',', $data['tag']);
+        if (count($tags_get)>=10) {
+            throw new InvalidArgumentException("Don't use over 10 tags");
+        }
         foreach ($tags_get as $value) {
-            $num = mb_strlen($value,"UTF-8");
-            if ($num > 32) {
+            $length = mb_strlen($value,"UTF-8");
+            if ($length > 32) {
                 throw new InvalidArgumentException('Some of tags is over range(32)!');
             }
         }

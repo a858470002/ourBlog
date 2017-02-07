@@ -12,11 +12,7 @@
 			
 			//查询 遍历导航栏
 			$sql = "SELECT * from article";
-			$res = mysqli_query($link,$sql);
-			$article = array();
-			while($row = mysqli_fetch_array($res)){
-				$article[] = $row;
-			};
+			$article = $dbh->query($sql)->fetchAll();
 			
 		?>
 		<!-- content -->
@@ -30,7 +26,6 @@
 									<a href='../config/functions.php?action=delete&id=".$value['id']."'>删除</a>
 								</td>
 							</tr>";
-							/*<td><input id='tag_".$value['id']."' class='tag' type='text' placeholder='添加标签' value='".$value['tag']."'' style='border:0px;' onblur='input(".$value['id'].")'></td>*/
 				}
 			 ?>
 		</table>
