@@ -51,8 +51,11 @@ function addArticle ($data,$dbh,$user_id)
     if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
-    
+
     if (!isset($data['link'])) {
+        throw new InvalidArgumentException('Missing requied key link');
+    }
+    if ($data['link'] == ''){
         $link = null;
     } else {
         $link = $data['link'];
@@ -191,7 +194,7 @@ function addArticle ($data,$dbh,$user_id)
 
 function editArticle ($data,$dbh,$user_id,$article_id) 
 {
-    $requiredKeys = array('column', 'title', 'formaltext', 'tag');
+    $requiredKeys = array('column', 'title', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("missing requied key $key");
@@ -206,16 +209,6 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     $length = mb_strlen($title,"UTF-8");
     if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
-    }
-
-    $formaltext = $data['formaltext'];
-    if (empty($formaltext)) {
-        throw new InvalidArgumentException('Please fill the formaltext');
-    }
-
-    $length = mb_strlen($formaltext,"UTF-8");
-    if ($length > 65534) {
-        throw new InvalidArgumentException('Formaltext is over range(65535)!');
     }
 
     $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
@@ -242,12 +235,37 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     // PDO Start
 
     // User check
-    $sql = "SELECT id from article where id = $article_id and user_id = $user_id";
-    $result = $dbh->query($sql)->fetchColumn();
+    $sql = "SELECT * from article where id = $article_id and user_id = $user_id";
+    $result = $dbh->query($sql)->fetchAll();
 
-    if ($result == 0) {
+    if (empty($result)) {
         throw new InvalidArgumentException("It's not your article");
     }
+    if ($result['is_link'] == 0) {
+        if (!isset($data['formaltext'])) {
+            throw new InvalidArgumentException('Missing requied key formaltext');
+            
+        }
+        $formaltext = $data['formaltext'];
+        if (empty($formaltext)) {
+            throw new InvalidArgumentException('The formaltext can not be empty');
+        }
+
+        $length = mb_strlen($formaltext,'UTF-8');
+        if ($length > 65534) {
+            throw new InvalidArgumentException('Formaltext is over range(65535)!');
+        }
+    } else {
+        if (!isset($data['link'])) {
+            throw new InvalidArgumentException('Missing requied key link');
+            
+        }
+        $link = $data['link'];
+        if (empty($link)) {
+            throw new InvalidArgumentException('The link can not be empty');
+        }
+    }
+
 
     try {
         // 1:Select * from tag_mid 
@@ -407,7 +425,6 @@ function deleteArticle ($dbh,$user_id,$article_id)
     if (!$id) {
         throw new InvalidArgumentException("Illegal operation");
     }
-    
     $sql = "SELECT id,user_id from article where id = $id ";
     $result = $dbh->query($sql)->fetchAll();
     if ($result == null) {
@@ -415,7 +432,7 @@ function deleteArticle ($dbh,$user_id,$article_id)
     } else {
         if ($result[0]['user_id'] == $user_id) {
             //Delete article
-            $sql = "DELETE a.*,tm.* from article a,tag_mid tm where a.id =$id and tm.article_id = $id";
+            $sql = "DELETE from article where id =$id ;DELETE from tag_mid where article_id = $id";
             $result = $dbh->query($sql);
         } else {
             throw new InvalidArgumentException("Delete failed: incorrect user");

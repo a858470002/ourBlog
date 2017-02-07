@@ -50,7 +50,7 @@
 			<input type="button" onclick="deleteLink()" value="取消插入" />
 			<br><br>
 			<textarea id="formaltext" name="formaltext" placeholder="正文"></textarea>
-			<input id="url" type="text" name="link" placeholder="链接" value="http://" style="display: none;">
+			<input id="url" type="text" name="link" placeholder="链接" style="display: none;">
 			<br><br>
 			<input id="tags" type='text' name='tag' placeholder='添加标签' >请用英文“，”分割，32个字符以内，不超过10个标签
 			<br><br>
@@ -87,6 +87,7 @@
 			document.getElementById("formaltext").setAttribute("style","display:none");
 			document.getElementById("formaltext").value = "";
 			document.getElementById('url').setAttribute("style","display:block");
+			document.getElementById('url').value = "http://";
 		}
 
 		function deleteLink() {
