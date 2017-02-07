@@ -217,7 +217,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please fill the formaltext or set a link
+     * @expectedExceptionMessage Please fill the formaltext
      */
     public function testAddArticleEmptyFormaltext()
     {
@@ -226,7 +226,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => '',
             'column'     => 1,
             'tag'        => 'java,php',
-            'link'       => null,
+            'link'       => 'http://www.baidu.com',
             'is_link'    => 0
             );
         $user_id = 1;
@@ -298,7 +298,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'title'      => 'title',
             'formaltext' => 'testFormaltext',
             'tag'        => 'java,php',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
         $user_id = 1;
@@ -316,7 +316,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => '',
             'tag'        => 'java,php',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
 
@@ -335,7 +335,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'java,php,php3,php4,php5,php6,php7,php8,php9,php10,php11',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
 
@@ -354,7 +354,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'java,php,php4567890123456789012345678901234',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
 
@@ -369,7 +369,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext', 
             'column'     => 1, 
             'tag'        => '',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
         );
         $user_id = 1;
@@ -389,7 +389,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => "testFormaltext'or''", 
             'column'     => 1, 
             'tag'        => '',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
         $user_id = 1;
@@ -409,7 +409,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext', 
             'column'     => 1, 
             'tag'        => 'java',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
         $user_id = 1;
@@ -434,7 +434,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java',
-            'link'       => null,
+            'link'       => '',
             'is_link'    => 0
             );
         $user_id    = 1;
@@ -444,15 +444,15 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage missing requied key formaltext
+     * @expectedExceptionMessage Missing requied key formaltext
      */
     public function testEditArticleNullFormaltext()
     {
         $data  = array(
-            'title'  => 'testTitle',
-            'column' => 1,
-            'tag'    => 'php,java',
-            'link'       => null,
+            'title'      => 'testTitle',
+            'column'     => 1,
+            'tag'        => 'php,java',
+            'link'       => '',
             'is_link'    => 0
             );
         $user_id    = 1;
@@ -501,7 +501,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please fill the formaltext
+     * @expectedExceptionMessage The formaltext can not be empty
      */
     public function testEditArticleEmptyFormaltext()
     {

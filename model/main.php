@@ -68,6 +68,9 @@ function addArticle ($data,$dbh,$user_id)
         throw new InvalidArgumentException('One of argument(formaltext, link) must be empty');
     }
     empty($link) ? $is_link = 0 : $is_link = 1;
+    if (empty($formaltext)) {
+        throw new InvalidArgumentException('Please fill the formaltext');
+    }
     $length  = mb_strlen($formaltext,'UTF-8');
     if ($length > 65534) {
         throw new InvalidArgumentException('Formaltext is over range(65535)!');
@@ -237,11 +240,10 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     // User check
     $sql = "SELECT * from article where id = $article_id and user_id = $user_id";
     $result = $dbh->query($sql)->fetchAll();
-
     if (empty($result)) {
         throw new InvalidArgumentException("It's not your article");
     }
-    if ($result['is_link'] == 0) {
+    if ($result[0]['is_link'] == 0) {
         if (!isset($data['formaltext'])) {
             throw new InvalidArgumentException('Missing requied key formaltext');
             
