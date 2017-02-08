@@ -60,7 +60,7 @@
             try {
                 editArticle($_POST,$dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/edit.php'</script>";
+                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/edit.php?id={$article_id}'</script>";
                 exit;
             } catch (Exception $e) {
                 echo $e->getMessage();
@@ -79,9 +79,6 @@
             try {
                 deleteArticle($dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo $e->getMessage();
-                // var_dump($e->getMessage());
-                die;
                 echo "<script>alert(".$e->getMessage().");window.location.href='../admin/index.php'</script>";
                 exit;
             } catch (Exception $e) {
@@ -90,7 +87,6 @@
             }
 
             echo "<script>alert('删除成功');window.location.href='../admin/index.php';</script>";
-
 			break;
 	}
 

@@ -37,7 +37,7 @@ function login ($data,$dbh)
 
 function addArticle ($data,$dbh,$user_id) 
 {
-    $requiredKeys = array('title', 'formaltext', 'column', 'tag');
+    $requiredKeys = array('title', 'formaltext', 'column', 'tag', 'link');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("Missing requied key $key");
@@ -52,9 +52,6 @@ function addArticle ($data,$dbh,$user_id)
         throw new InvalidArgumentException('Title is over range(64)!');
     }
 
-    if (!isset($data['link'])) {
-        throw new InvalidArgumentException('Missing requied key link');
-    }
     if ($data['link'] == ''){
         $link = null;
     } else {
@@ -68,7 +65,7 @@ function addArticle ($data,$dbh,$user_id)
         throw new InvalidArgumentException('One of argument(formaltext, link) must be empty');
     }
     empty($link) ? $is_link = 0 : $is_link = 1;
-    if (empty($formaltext)) {
+    if ($is_link == 0 && empty($formaltext)) {
         throw new InvalidArgumentException('Please fill the formaltext');
     }
     $length  = mb_strlen($formaltext,'UTF-8');
@@ -104,8 +101,8 @@ function addArticle ($data,$dbh,$user_id)
         $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
         $sth->bindValue(':column',$column,PDO::PARAM_INT);
         $sth->bindValue(':user_id',$user_id,PDO::PARAM_INT);
-        $sth->bindValue(':link',$link,PDO::PARAM_STR);
-        $sth->bindValue(':is_link',$is_link,PDO::PARAM_STR);
+        $sth->bindValue(':link',$link);
+        $sth->bindValue(':is_link',$is_link,PDO::PARAM_INT);
         $sth->execute();
 
         $article_id = $dbh->lastInsertId();
@@ -257,6 +254,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if ($length > 65534) {
             throw new InvalidArgumentException('Formaltext is over range(65535)!');
         }
+        $link = NULL;
     } else {
         if (!isset($data['link'])) {
             throw new InvalidArgumentException('Missing requied key link');
@@ -266,6 +264,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if (empty($link)) {
             throw new InvalidArgumentException('The link can not be empty');
         }
+        $formaltext = '';
     }
 
 
@@ -284,10 +283,11 @@ function editArticle ($data,$dbh,$user_id,$article_id)
 
         $dbh->beginTransaction();
         // 2:Update1: article
-        $sth = $dbh->prepare("UPDATE article set title = :title,formaltext = :ftext,`column` = :column where id=:article_id");
+        $sth = $dbh->prepare("UPDATE article set title = :title,formaltext = :ftext,`column` = :column, link = :link where id=:article_id");
         $sth->bindValue(':title',$title,PDO::PARAM_STR);
         $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
         $sth->bindValue(':column',$column,PDO::PARAM_INT);
+        $sth->bindValue(':link',$link,PDO::PARAM_STR);
         $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
         $sth->execute();
 

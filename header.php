@@ -1,22 +1,12 @@
-<a id="logo" href="./index.php">Ourblog</a>
-<a class="nav" href="./index.php">HomePage</a>
 <?php 
 	include("./config/database.php");
+    header("content-type:text/html;charset=utf-8");
 
 	//checkout user
 	session_start();
 	if(!isset($_SESSION['uid'])){
 		echo "<script>alert('请登录');window.location.href='./admin/login.php';</script>";
+        exit;
 	} else {
         $user_id = $_SESSION['uid'];
     }
-
-	//查询 遍历所有导航栏
-	$sql = "select * from types;";
-	$sth = $dbh->query($sql);
-	$types = $sth->fetchAll();
-	foreach ($types as $value) {
-		echo "<a class='nav' href='./index.php?type={$value['id']}&user_id={$user_id}'>{$value['name']}</a>";
-	}
- ?>
- <hr style="margin-bottom: 50px;">

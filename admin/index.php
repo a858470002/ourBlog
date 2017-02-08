@@ -1,3 +1,11 @@
+<?php
+	include("./header.php");
+	include("../config/database.php");
+	
+	//查询 遍历导航栏
+	$sql = "SELECT * from article";
+	$article = $dbh->query($sql)->fetchAll();
+?>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -6,21 +14,13 @@
 <body>
 	<div id="body">
 		<!-- header -->
-		<?php
-			include("./header.php");
-			include("../config/database.php");
-			
-			//查询 遍历导航栏
-			$sql = "SELECT * from article";
-			$article = $dbh->query($sql)->fetchAll();
-			
-		?>
+		<?php include("./nav.php"); ?>
 		<!-- content -->
 		<table width="90%" style="margin: 0 auto;">
 			<?php 
 				foreach ($article as $value) {
 					echo "	<tr>
-								<td width='80%'><h4>".$value['title']."</h4></td>
+								<td width='80%'><h4>".htmlspecialchars($value['title'])."</h4></td>
 								<td>
 									<a href='./edit.php?id=".$value['id']."'>编辑</a>
 									<a href='../config/functions.php?action=delete&id=".$value['id']."'>删除</a>

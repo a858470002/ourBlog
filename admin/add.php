@@ -1,3 +1,9 @@
+<?php
+	include("./header.php");
+	include("../config/database.php");
+
+	$column = $dbh->query('SELECT * from types');
+?>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -27,20 +33,14 @@
 <body>
 	<div id="body">
 		<!-- header -->
-		<?php
-			include("./header.php");
-			include("../config/database.php");
-
-			$column = $dbh->query('SELECT * from types');
-			$tags   = $dbh->query('SELECT * from tag');
-		?>
+		<?php include("./nav.php"); ?>
 		<!-- content -->
 		<form id="form" action="../config/functions.php?action=add" method="post">
 			<select id="column" name="column">
 				<option value="0">所属栏目</option>
 				<?php
 					foreach($column as $v){
-						echo "<option value=".$v['id'].">".$v['name']."</option>";
+						echo "<option value=".$v['id'].">".htmlspecialchars($v['name'])."</option>";
 					};
 				?>
 			</select>

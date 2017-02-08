@@ -1,3 +1,24 @@
+<?php
+	include("./header.php");
+
+	$column = isset($_GET['type']) ? $_GET['type'] : NULL;
+	if ($column != NULL){
+		$column = filter_var($column,FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+	    if (!$column) {
+	        echo "<script>alert('非法的column id');window.location.href='../admin/index.php'</script>";
+	        exit;
+	    } 
+	} 
+	//如果点击了不同栏目，查询不同结果
+	if ($column != NULL) {
+		$sql = "SELECT * from article where `column`= $column and user_id = $user_id";
+	} else {
+		$sql = "SELECT * from article where user_id = $user_id";
+	}
+
+	$sth = $dbh->query($sql);
+	$article = $sth->fetchAll();
+?>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -6,21 +27,7 @@
 <body>
 	<div id="body">
 		<!-- header -->
-		<?php
-			include("./header.php");
-
-			$type = isset($_GET['type']) ? $_GET['type'] : NULL;
-			
-			//如果点击了不同栏目，查询不同结果
-			if ($type != NULL) {
-				$sql = "SELECT * from article where `column`={$type};";
-			} else {
-				$sql = "SELECT * from article";
-			}
-
-			$sth = $dbh->query($sql);
-			$article = $sth->fetchAll();
-		?>
+		<?php include("./nav.php"); ?>
 		<!-- content -->
 		<?php 
 			foreach ($article as $value) {
