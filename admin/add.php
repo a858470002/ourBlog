@@ -48,6 +48,7 @@
 			<input id="title" type="text" name="title" placeholder="标题" style="width: 40%;">
 			<input type="button" onclick="insertLink()" value="插入链接" />
 			<input type="button" onclick="deleteLink()" value="取消插入" />
+			<input type="hidden" id="isLink" name="isLink" value="0" />
 			<br><br>
 			<textarea id="formaltext" name="formaltext" placeholder="正文"></textarea>
 			<input id="url" type="text" name="link" placeholder="链接" style="display: none;">
@@ -88,12 +89,14 @@
 			document.getElementById("formaltext").value = "";
 			document.getElementById('url').setAttribute("style","display:block");
 			document.getElementById('url').value = "http://";
+			document.getElementById('isLink').value = "1";
 		}
 
 		function deleteLink() {
 			document.getElementById("formaltext").setAttribute("style","display:block");
 			document.getElementById('url').setAttribute("style","display:none");
 			document.getElementById('url').value = "";
+			document.getElementById('isLink').value = "0";
 		}
 
 	</script>

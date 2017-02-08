@@ -42,7 +42,16 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                     'user_id'    => 1,
                     'link'       => NULl,
                     'is_link'    => 0
-                    )
+                    ),
+                array(
+                    'id'         => 2,
+                    'title'      => 'test article2',
+                    'formaltext' => '',
+                    'column'     => 1,
+                    'user_id'    => 1,
+                    'link'       => 'http://www/baidu.com',
+                    'is_link'    => 1
+                    )  
             ),
             'tag'=>array(
                 array('id'=>1, 'name'=>'php', 'user_id'=>1),
@@ -156,7 +165,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0,
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -174,7 +183,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -192,7 +201,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             ); 
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -209,7 +218,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -217,9 +226,9 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please fill the formaltext or set a link
+     * @expectedExceptionMessage Please fill the formaltext
      */
-    public function testAddArticleEmptyBothFormaltextAndLink()
+    public function testAddArticleEmptyFormaltext()
     {
         $data = array(
             'title'      => 'title',
@@ -227,7 +236,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -235,7 +244,25 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage One of argument(formaltext, link) must be empty
+     * @expectedExceptionMessage Please set a link
+     */
+    public function testAddArticleEmptyLink()
+    {
+        $data = array(
+            'title'      => 'title',
+            'formaltext' => '',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => '',
+            'isLink'     => 1
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage One of params(formaltext, link) must be empty
      */
     public function testAddArticleSetBothFormaltextAndLink()
     {
@@ -245,12 +272,11 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php',
             'link'       => 'http;//www.baidu.com',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
     }
-
 
     /**
      * @expectedException   InvalidArgumentException
@@ -263,7 +289,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -281,7 +307,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => '',
             'tag'        => 'java,php',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
 
         $user_id = 1;
@@ -300,7 +326,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php,php3,php4,php5,php6,php7,php8,php9,php10,php11',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
 
         $user_id = 1;
@@ -319,7 +345,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1,
             'tag'        => 'java,php,php4567890123456789012345678901234',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
 
         $user_id = 1;
@@ -334,11 +360,11 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1, 
             'tag'        => '',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
         );
         $user_id = 1;
         $result  = arrset();
-        $result['article'][1]['title'] = "testTitle'or''";
+        $result['article'][2]['title'] = "testTitle'or''";
         addArticle($data, PDOStart(), $user_id);
         $expectedTable = new MyApp_DbUnit_ArrayDataSet($result);
         $actualTable   = $this->getConnection()->createDataSet(array('article','tag','tag_mid'));
@@ -354,11 +380,11 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1, 
             'tag'        => '',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         $result  = arrset();
-        $result['article'][1]['formaltext'] = "testFormaltext'or''";
+        $result['article'][2]['formaltext'] = "testFormaltext'or''";
         addArticle($data, PDOStart(), $user_id);
         $expectedTable = new MyApp_DbUnit_ArrayDataSet($result);
         $actualTable   = $this->getConnection()->createDataSet(array('article','tag','tag_mid'));
@@ -374,11 +400,11 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'column'     => 1, 
             'tag'        => 'java',
             'link'       => '',
-            'is_link'    => 0
+            'isLink'     => 0
             );
         $user_id = 1;
         $result  = arrset();
-        $result['tag_mid'][2] = array('id'=>3, 'tag_id'=>2, 'article_id'=>2);
+        $result['tag_mid'][2] = array('id'=>3, 'tag_id'=>2, 'article_id'=>3);
         addArticle($data, PDOStart(), $user_id);
         $expectedTable = new MyApp_DbUnit_ArrayDataSet($result);
         $actualTable   = $this->getConnection()->createDataSet(array('article','tag','tag_mid'));
@@ -398,43 +424,6 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java',
-            'link'       => '',
-            'is_link'    => 0
-            );
-        $user_id    = 1;
-        $article_id = 1;
-        editArticle($data, PDOStart(), $user_id, $article_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Missing requied key formaltext
-     */
-    public function testEditArticleNullFormaltext()
-    {
-        $data  = array(
-            'title'      => 'testTitle',
-            'column'     => 1,
-            'tag'        => 'php,java',
-            'link'       => '',
-            'is_link'    => 0
-            );
-        $user_id    = 1;
-        $article_id = 1;
-        editArticle($data, PDOStart(), $user_id, $article_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage missing requied key column
-     */
-
-    public function testEditArticleNullColumn()
-    {
-        $data = array(
-            'title'      => 'testTitle',
-            'formaltext' => 'testFormaltext',
-            'tag'        => 'php,java,js',
             'link'       => '',
             'is_link'    => 0
             );
@@ -465,6 +454,24 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage missing requied key formaltext
+     */
+    public function testEditArticleNullFormaltext()
+    {
+        $data  = array(
+            'title'      => 'testTitle',
+            'column'     => 1,
+            'tag'        => 'php,java',
+            'link'       => '',
+            'is_link'    => 0
+            );
+        $user_id    = 1;
+        $article_id = 1;
+        editArticle($data, PDOStart(), $user_id, $article_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
      * @expectedExceptionMessage The formaltext can not be empty
      */
     public function testEditArticleEmptyFormaltext()
@@ -473,6 +480,44 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'title'      => 'testTitle',
             'formaltext' => '',
             'column'     => 1,
+            'tag'        => 'php,java,js',
+            'link'       => '',
+            'is_link'    => 0
+            );
+        $user_id    = 1;
+        $article_id = 1;
+        editArticle($data, PDOStart(), $user_id, $article_id);
+    }
+    
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage The link can not be empty
+     */
+    public function testEditArticleEmptyLink()
+    {
+        $data = array(
+            'title'      => 'testTitle',
+            'formaltext' => '',
+            'column'     => 1,
+            'tag'        => 'php,java,js',
+            'link'       => '',
+            'is_link'    => 1
+            );
+        $user_id    = 1;
+        $article_id = 2;
+        editArticle($data, PDOStart(), $user_id, $article_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage missing requied key column
+     */
+
+    public function testEditArticleNullColumn()
+    {
+        $data = array(
+            'title'      => 'testTitle',
+            'formaltext' => 'testFormaltext',
             'tag'        => 'php,java,js',
             'link'       => '',
             'is_link'    => 0
@@ -533,8 +578,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
         $user_id    = 1;
         $article_id = 1;
         $result     = arrset();
-        $result['article'] = array(
-                array(
+        $result['article'][0] = array(
                     'id'         => 1,
                     'title'      => 'testTitle',
                     'formaltext' => 'testFormaltext',
@@ -542,8 +586,8 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                     'user_id'    => 1,
                     'link'       => null,
                     'is_link'    => 0
-                    )
             );
+        unset($result['article'][2]);
         editArticle($data, PDOStart(), $user_id, $article_id);
         $expectedTable = new MyApp_DbUnit_ArrayDataSet($result);
         $actualTable   = $this->getConnection()->createDataSet(array('article','tag','tag_mid'));
@@ -564,8 +608,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
         $user_id    = 1;
         $article_id = 1;
         $result     = arrset();
-        $result['article'] = array(
-            array(
+        $result['article'][0] = array(
                 'id'         => 1,
                 'title'      => 'testTitle',
                 'formaltext' => 'testFormaltext',
@@ -573,8 +616,8 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'user_id'    => 1,
                 'link'       => null,
                 'is_link'    => 0
-                )
             );
+        unset($result['article'][2]);
         $result['tag'][2]     = array('id'=>3, 'name'=>'js', 'user_id'=>1);
         $result['tag_mid'][2] = array('id'=>3, 'tag_id'=>3, 'article_id'=>1);
         editArticle($data, PDOStart(), $user_id, $article_id);
@@ -597,8 +640,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
         $user_id    = 1;
         $article_id = 1;
         $result     = arrset();
-        $result['article'] = array(
-            array(
+        $result['article'][0] = array(
                 'id'         => 1,
                 'title'      => 'testTitle',
                 'formaltext' => 'testFormaltext',
@@ -606,8 +648,8 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'user_id'    => 1,
                 'link'       => null,
                 'is_link'    => 0
-                )
             );
+        unset($result['article'][2]);
         $result['tag_mid'] = array(
             array('id'=>1, 'tag_id'=>1, 'article_id'=>1)
             );
@@ -631,8 +673,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
         $user_id    = 1;
         $article_id = 1;
         $result     = arrset();
-        $result['article'] = array(
-            array(
+        $result['article'][0] = array(
                 'id'         => 1,
                 'title'      => 'testTitle',
                 'formaltext' => 'testFormaltext',
@@ -640,8 +681,8 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'user_id'    => 1,
                 'link'       => null,
                 'is_link'    => 0
-                )
             );
+        unset($result['article'][2]);
         unset($result['tag_mid']);
         editArticle($data, PDOStart(), $user_id, $article_id);
         $expectedTable = new MyApp_DbUnit_ArrayDataSet($result);
@@ -682,7 +723,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
     public function testDeleteArticleWrongArticle()
     {
         $user_id    = 1;
-        $article_id = 2;
+        $article_id = 3;
         deleteArticle (PDOStart(), $user_id, $article_id);
     }
 
@@ -691,7 +732,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
         $user_id    = 1;
         $article_id = 1;
         deleteArticle (PDOStart(), $user_id, $article_id);
-        $this->assertEquals(0,$this->getConnection()->getRowCount('article'));
+        $this->assertEquals(1,$this->getConnection()->getRowCount('article'));
         $this->assertEquals(0,$this->getConnection()->getRowCount('tag_mid'));
     }
 }

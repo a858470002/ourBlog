@@ -37,7 +37,7 @@ function login ($data,$dbh)
 
 function addArticle ($data,$dbh,$user_id) 
 {
-    $requiredKeys = array('title', 'formaltext', 'column', 'tag', 'link');
+    $requiredKeys = array('title', 'formaltext', 'column', 'tag', 'link', 'isLink');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("Missing requied key $key");
@@ -57,16 +57,19 @@ function addArticle ($data,$dbh,$user_id)
     } else {
         $link = $data['link'];
     }
+    $is_link = $data['isLink'];
+    if (!($is_link == 0 || $is_link == 1)) {
+        throw new InvalidArgumentException("'IsLink' is invalid");
+    }
     $formaltext = $data['formaltext'];
-    if (empty($formaltext) && empty($link)) {
-        throw new InvalidArgumentException('Please fill the formaltext or set a link');
-    }
-    if (!empty($formaltext) && !empty($link)) {
-        throw new InvalidArgumentException('One of argument(formaltext, link) must be empty');
-    }
-    empty($link) ? $is_link = 0 : $is_link = 1;
     if ($is_link == 0 && empty($formaltext)) {
         throw new InvalidArgumentException('Please fill the formaltext');
+    }
+    if ($is_link == 1 && empty($link)) {
+        throw new InvalidArgumentException('Please set a link');
+    }
+    if (!empty($formaltext) && !empty($link)) {
+        throw new InvalidArgumentException('One of params(formaltext, link) must be empty');
     }
     $length  = mb_strlen($formaltext,'UTF-8');
     if ($length > 65534) {
@@ -79,7 +82,7 @@ function addArticle ($data,$dbh,$user_id)
     
     if (!empty($data['tag'])) {
         $tags = explode(',', $data['tag']);
-        if (count($tags)>=10) {
+        if (count($tags) >= 10) {
             throw new InvalidArgumentException('Don\'t use over 10 tags');
         }
         foreach ($tags as $value) {
@@ -101,7 +104,7 @@ function addArticle ($data,$dbh,$user_id)
         $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
         $sth->bindValue(':column',$column,PDO::PARAM_INT);
         $sth->bindValue(':user_id',$user_id,PDO::PARAM_INT);
-        $sth->bindValue(':link',$link);
+        $sth->bindValue(':link',$link,PDO::PARAM_STR);
         $sth->bindValue(':is_link',$is_link,PDO::PARAM_INT);
         $sth->execute();
 
@@ -110,12 +113,11 @@ function addArticle ($data,$dbh,$user_id)
         // If have tags
         if (!empty($tags)) {
             // Select all tags ,match the same 
-            $param = "";
+            $param = array();
             foreach ($tags as $value) {
-                $value = $dbh->quote($value);
-                $param .= "$value,";
+                $param[] = $dbh->quote($value);
             }
-            $param = trim($param,",");
+            $param = implode(',', $param);
 
             // 2.select tags which already have
             $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
@@ -141,12 +143,12 @@ function addArticle ($data,$dbh,$user_id)
         if (!empty($arr_diff)) {
             // 3.insert new tag (match, and del the same tag)
             $user_id = intval($user_id);
-            $sqlValues  = '';
+            $sqlValues  = array();
 
             foreach ($arr_diff as $v) {
-                $sqlValues .= "(".$dbh->quote($v).",$user_id),";
+                $sqlValues[] = "(".$dbh->quote($v).",$user_id),";
             }
-            $sqlValues = trim($sqlValues,",");
+            $sqlValues = implode(',', $sqlValues);
 
             $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
             $sth->execute();
@@ -155,11 +157,11 @@ function addArticle ($data,$dbh,$user_id)
 
         if (!empty($tags)) {
             // 4.Select diff tags id 
-            $param = '';
+            $param = array();
             foreach ($tags as $value) {
-                $param .= $dbh->quote($value) . ',';
+                $param[] = $dbh->quote($value);
             }
-            $param = trim($param,",");
+            $param = implode(',', $param);
             $sql = "SELECT * from tag WHERE name in ($param)";
             $sth = $dbh->query($sql);
             $diffTags = $sth->fetchAll();
@@ -173,13 +175,11 @@ function addArticle ($data,$dbh,$user_id)
             }
             
             // 5.insert new tag & article (table tag_mid)
-            $sqlValues = '';
+            $sqlValues = array();
             foreach ($arr_id as $value) {
-                $value = $dbh->quote($value);
-                $sqlValues .= "($value,'$article_id'),";
+                $sqlValues[] = "(".$dbh->quote($value).",'$article_id')";
             }
-
-            $sqlValues = trim($sqlValues,",");
+            $sqlValues = implode(',', $sqlValues);
             $sth = $dbh->prepare("INSERT into tag_mid(tag_id,article_id) VALUES $sqlValues");
             $sth->execute();
         }
@@ -194,11 +194,10 @@ function addArticle ($data,$dbh,$user_id)
 
 function editArticle ($data,$dbh,$user_id,$article_id) 
 {
-    $requiredKeys = array('column', 'title', 'tag');
+    $requiredKeys = array('title', 'formaltext', 'link', 'column', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("missing requied key $key");
-            
         }
     }
     $title = trim($data['title']);
