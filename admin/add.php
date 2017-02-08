@@ -59,45 +59,45 @@
 		</form>
 	</div>
 </body>
-	<script type="text/javascript">
-		//提交时check是否为空
-		function checkNull(){
-			//获取栏目
-			var column = document.getElementById('column');
-			var selected = column.selectedIndex;
+<script type="text/javascript">
+	//提交时check是否为空
+	function checkNull(){
+		//获取栏目
+		var column = document.getElementById('column');
+		var selected = column.selectedIndex;
 
-			//分别获取栏目的value、标题value、正文value
-			var value1 = column.options[selected].value;
-			var value2 = document.getElementById('title').value
-			var value3 = document.getElementById('formaltext').value
-			var value4 = document.getElementById('url').value
+		//分别获取栏目的value、标题value、正文value
+		var value1 = column.options[selected].value;
+		var value2 = document.getElementById('title').value
+		var value3 = document.getElementById('formaltext').value
+		var value4 = document.getElementById('url').value
 
-			//判断并弹窗，成功则submit表单
-			if (value1 == 0) {
-				alert("请选择一个栏目");
+		//判断并弹窗，成功则submit表单
+		if (value1 == 0) {
+			alert("请选择一个栏目");
+		} else {
+			if (value2 == '' || (value3 == '' && value4 == '')) {
+				alert("请填写标题和内容");
 			} else {
-				if (value2 == '' || (value3 == '' && value4 == '')) {
-					alert("请填写标题和内容");
-				} else {
-					document.getElementById('form').submit();
-				}
+				document.getElementById('form').submit();
 			}
 		}
+	}
 
-		function insertLink() {
-			document.getElementById("formaltext").setAttribute("style","display:none");
-			document.getElementById("formaltext").value = "";
-			document.getElementById('url').setAttribute("style","display:block");
-			document.getElementById('url').value = "http://";
-			document.getElementById('isLink').value = "1";
-		}
+	function insertLink() {
+		document.getElementById("formaltext").setAttribute("style","display:none");
+		document.getElementById("formaltext").value = "";
+		document.getElementById('url').setAttribute("style","display:block");
+		document.getElementById('url').value = "http://";
+		document.getElementById('isLink').value = "1";
+	}
 
-		function deleteLink() {
-			document.getElementById("formaltext").setAttribute("style","display:block");
-			document.getElementById('url').setAttribute("style","display:none");
-			document.getElementById('url').value = "";
-			document.getElementById('isLink').value = "0";
-		}
+	function deleteLink() {
+		document.getElementById("formaltext").setAttribute("style","display:block");
+		document.getElementById('url').setAttribute("style","display:none");
+		document.getElementById('url').value = "";
+		document.getElementById('isLink').value = "0";
+	}
 
-	</script>
+</script>
 </html>

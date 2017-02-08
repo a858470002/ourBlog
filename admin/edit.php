@@ -13,20 +13,19 @@
         exit;
     } 
 
-    $column  = $dbh->query('SELECT * from types');
     $article = $dbh->query("SELECT * from article where id = $id and user_id = $user_id")->fetch();
-
     if ($article == null) {
         echo "<center>Article don't exists or illegal user !</center>";
         exit;
     }
 
+    $column  = $dbh->query('SELECT * from types')->fetchAll();
     //Select from tag_mid 
     $tag_mid = $dbh->query("SELECT tag_id from tag_mid where article_id = $id")->fetchAll();
 
     if (!empty($tag_mid)){
         foreach ($tag_mid as $value) {
-            $tag_id[] = "'".$value['tag_id']."'";
+            $tag_id[] = $value['tag_id'];
         }
         $param = implode(',', $tag_id);
         

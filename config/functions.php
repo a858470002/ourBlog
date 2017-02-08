@@ -1,9 +1,4 @@
 <?php
-	session_start();
-	header("content-type:text/html;charset=utf-8");
-    include("./database.php");
-	include("../model/main.php");
-
 	//获取地址中的action
 	if (isset($_GET["action"])) {
 		$action = $_GET["action"];
@@ -11,7 +6,10 @@
         header("Location: /admin/index.php");
         exit;
     }
-    $dbh=PDOStart();
+    session_start();
+    header("content-type:text/html;charset=utf-8");
+    include("./database.php");
+    include("../model/main.php");
     
     switch ($action) {
         //登录判断
@@ -55,7 +53,12 @@
 		//修改文章
 		case "edit":
 			$user_id = loginCheck();
-            $article_id = $_GET['id']; 
+            $article_id = isset($_GET['id']) ? $_GET['id'] : NULL;
+            $article_id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+            if (!$article_id) {
+                echo "<script>alert('非法的文章id');window.location.href='../admin/index.php'</script>";
+                exit;
+            }
 
             try {
                 editArticle($_POST,$dbh,$user_id,$article_id);
@@ -74,7 +77,12 @@
 		//删除文章
 		case "delete":
 			$user_id = loginCheck();
-            $article_id = $_GET['id'];
+            $article_id = isset($_GET['id']) ? $_GET['id'] : NULL;
+            $article_id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+            if (!$article_id) {
+                echo "<script>alert('非法的文章id');window.location.href='../admin/index.php'</script>";
+                exit;
+            }
 
             try {
                 deleteArticle($dbh,$user_id,$article_id);

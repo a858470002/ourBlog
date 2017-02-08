@@ -215,6 +215,9 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         throw new InvalidArgumentException('Column is invalid');
     }
     $article_id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+    if (!$article_id) {
+        throw new InvalidArgumentException('Articleid is invalid');
+    }
 
     if (!empty($data["tag"])) {
         $tags_get = explode(',', $data['tag']);

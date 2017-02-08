@@ -11,9 +11,9 @@
 	} 
 	//如果点击了不同栏目，查询不同结果
 	if ($column != NULL) {
-		$sql = "SELECT * from article where `column`= $column and user_id = $user_id";
+		$sql = "SELECT * from article where `column`= $column ";
 	} else {
-		$sql = "SELECT * from article where user_id = $user_id";
+		$sql = "SELECT * from article ";
 	}
 
 	$sth = $dbh->query($sql);
@@ -39,7 +39,7 @@
 					$link = "<sup title='It is a link'>[link]</sup>";
 				}
 				echo "<ul>
-						<li><a href=$href>{$value['title']}</a>$link</li>
+						<li><a href='".$href."'>".htmlspecialchars($value['title'])."</a>$link</li>
 					</ul>";
 			}
 		 ?>
