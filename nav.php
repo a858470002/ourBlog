@@ -8,7 +8,7 @@
 <a class="nav" href="./index.php">HomePage</a>
  <?php
     foreach ($types as $value) {
-        echo "<a class='nav' href='./index.php?type={$value['id']}&user_id={$user_id}'>{$value['name']}</a>";
+        echo "<a class='nav' href='./index.php?type={$value['id']}'>{$value['name']}</a>";
     }
 ?>
 <hr style="margin-bottom: 50px;">

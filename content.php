@@ -18,6 +18,7 @@
 	<style type="text/css">
 		/* 换行 */
 		* {word-wrap: break-word;}
+		a {font-size: 16px;}
 	</style>
 </head>
 <body>
@@ -27,7 +28,7 @@
 		<!-- content -->
 		<div style="width: 100%;">
 			<h1><?php echo htmlspecialchars($data['title']); ?></h1>
-			<?php echo "<pre>".htmlspecialchars($data['formaltext'])."</pre>"; ?>
+			<?php echo "<pre><a>".htmlspecialchars($data['formaltext'])."</a></pre>"; ?>
 		</div>
 	</div>
 </body>

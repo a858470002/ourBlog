@@ -71,6 +71,10 @@ function addArticle ($data,$dbh,$user_id)
     if (!empty($formaltext) && !empty($link)) {
         throw new InvalidArgumentException('One of params(formaltext, link) must be empty');
     }
+    $link = filter_var($link,FILTER_VALIDATE_URL);
+    if (!$link) {
+        throw new InvalidArgumentException('Link is invalid');
+    }
     $length  = mb_strlen($formaltext,'UTF-8');
     if ($length > 65534) {
         throw new InvalidArgumentException('Formaltext is over range(65535)!');
@@ -265,6 +269,10 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         $link = $data['link'];
         if (empty($link)) {
             throw new InvalidArgumentException('The link can not be empty');
+        }
+        $link = filter_var($link,FILTER_VALIDATE_URL);
+        if (!$link) {
+            throw new InvalidArgumentException('Link is invalid');
         }
         $formaltext = '';
     }
