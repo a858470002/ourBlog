@@ -40,7 +40,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                     'formaltext' => 'wojiushi zhengwen',
                     'column'     => 1,
                     'user_id'    => 1,
-                    'link'       => NULl,
+                    'link'       => '',
                     'is_link'    => 0
                     ),
                 array(
@@ -156,130 +156,6 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Missing requied key title
-     */
-    public function testAddArticleUnsetTitle()
-    {
-        $data   = array(
-            'formaltext' => 'testFormaltext',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0,
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please fill the title
-     */
-    public function testAddArticleEmptyTitle()
-    {
-        $data   = array(
-            'title'      => '',
-            'formaltext' => 'testFormaltext',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Title is over range(64)!
-     */
-    public function testAddArticleOverRangeTitle()
-    {
-        $data = array(
-            'title'      => '1234567890123456789012345678901234567890123456789012345678901234567890',
-            'formaltext' => 'testFormaltext',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
-            ); 
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Missing requied key formaltext
-     */
-    public function testAddArticleUnsetFormaltext()
-    {
-        $data   = array(
-            'title'      => 'title',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please fill the formaltext
-     */
-    public function testAddArticleEmptyFormaltext()
-    {
-        $data = array(
-            'title'      => 'title',
-            'formaltext' => '',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage Please set a link
-     */
-    public function testAddArticleEmptyLink()
-    {
-        $data = array(
-            'title'      => 'title',
-            'formaltext' => '',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 1
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
-     * @expectedExceptionMessage One of params(formaltext, link) must be empty
-     */
-    public function testAddArticleSetBothFormaltextAndLink()
-    {
-        $data = array(
-            'title'      => 'title',
-            'formaltext' => 'formaltext',
-            'column'     => 1,
-            'tag'        => 'java,php',
-            'link'       => 'http;//www.baidu.com',
-            'isLink'     => 0
-            );
-        $user_id = 1;
-        addArticle($data, PDOStart(), $user_id);
-    }
-
-    /**
-     * @expectedException   InvalidArgumentException
      * @expectedExceptionMessage Missing requied key column
      */
     public function testAddArticleUnsetColumn()
@@ -288,8 +164,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'title'      => 'title',
             'formaltext' => 'testFormaltext',
             'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
@@ -306,10 +181,126 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => '',
             'tag'        => 'java,php',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
 
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage Missing requied key title
+     */
+    public function testAddArticleUnsetTitle()
+    {
+        $data   = array(
+            'formaltext' => 'testFormaltext',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage Please fill the title
+     */
+    public function testAddArticleEmptyTitle()
+    {
+        $data   = array(
+            'title'      => '',
+            'formaltext' => 'testFormaltext',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage Title is over range(64)!
+     */
+    public function testAddArticleOverRangeTitle()
+    {
+        $data = array(
+            'title'      => '1234567890123456789012345678901234567890123456789012345678901234567890',
+            'formaltext' => 'testFormaltext',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            ); 
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage Missing requied key formaltext
+     */
+    public function testAddArticleUnsetFormaltext()
+    {
+        $data   = array(
+            'title'      => 'title',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage You should fill content
+     */
+    public function testAddArticleEmptyFormaltext()
+    {
+        $data = array(
+            'title'      => 'title',
+            'formaltext' => '',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage You should fill content
+     */
+    public function testAddArticleEmptyLink()
+    {
+        $data = array(
+            'title'      => 'title',
+            'formaltext' => '',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => ''
+            );
+        $user_id = 1;
+        addArticle($data, PDOStart(), $user_id);
+    }
+
+    /**
+     * @expectedException   InvalidArgumentException
+     * @expectedExceptionMessage One of params(formaltext, link) must be empty
+     */
+    public function testAddArticleSetBothFormaltextAndLink()
+    {
+        $data = array(
+            'title'      => 'title',
+            'formaltext' => 'formaltext',
+            'column'     => 1,
+            'tag'        => 'java,php',
+            'link'       => 'http;//www.baidu.com'
+            );
         $user_id = 1;
         addArticle($data, PDOStart(), $user_id);
     }
@@ -325,8 +316,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'java,php,php3,php4,php5,php6,php7,php8,php9,php10,php11',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
 
         $user_id = 1;
@@ -344,8 +334,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'java,php,php4567890123456789012345678901234',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
 
         $user_id = 1;
@@ -359,8 +348,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext', 
             'column'     => 1, 
             'tag'        => '',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
         );
         $user_id = 1;
         $result  = arrset();
@@ -379,8 +367,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => "testFormaltext'or''", 
             'column'     => 1, 
             'tag'        => '',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
         $user_id = 1;
         $result  = arrset();
@@ -399,8 +386,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext', 
             'column'     => 1, 
             'tag'        => 'java',
-            'link'       => '',
-            'isLink'     => 0
+            'link'       => ''
             );
         $user_id = 1;
         $result  = arrset();
@@ -424,8 +410,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -443,8 +428,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -462,8 +446,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'title'      => 'testTitle',
             'column'     => 1,
             'tag'        => 'php,java',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -481,8 +464,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => '',
             'column'     => 1,
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -500,8 +482,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => '',
             'column'     => 1,
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 1
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 2;
@@ -519,8 +500,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'title'      => 'testTitle',
             'formaltext' => 'testFormaltext',
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -538,8 +518,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => "'or''",
             'column'     => 1.2,
             'tag'        => "'or''",
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -557,8 +536,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 2;
         $article_id = 1;
@@ -572,8 +550,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -584,7 +561,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                     'formaltext' => 'testFormaltext',
                     'column'     => 1,
                     'user_id'    => 1,
-                    'link'       => null,
+                    'link'       => '',
                     'is_link'    => 0
             );
         unset($result['article'][2]);
@@ -602,8 +579,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => 'php,java,js',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -614,7 +590,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'formaltext' => 'testFormaltext',
                 'column'     => 1,
                 'user_id'    => 1,
-                'link'       => null,
+                'link'       => '',
                 'is_link'    => 0
             );
         unset($result['article'][2]);
@@ -634,8 +610,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' =>'testFormaltext',
             'column'     =>1,
             'tag'        =>'php',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -646,7 +621,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'formaltext' => 'testFormaltext',
                 'column'     => 1,
                 'user_id'    => 1,
-                'link'       => null,
+                'link'       => '',
                 'is_link'    => 0
             );
         unset($result['article'][2]);
@@ -667,8 +642,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
             'formaltext' => 'testFormaltext',
             'column'     => 1,
             'tag'        => '',
-            'link'       => '',
-            'is_link'    => 0
+            'link'       => ''
             );
         $user_id    = 1;
         $article_id = 1;
@@ -679,7 +653,7 @@ class mainTest extends PHPUnit_Extensions_Database_TestCase
                 'formaltext' => 'testFormaltext',
                 'column'     => 1,
                 'user_id'    => 1,
-                'link'       => null,
+                'link'       => '',
                 'is_link'    => 0
             );
         unset($result['article'][2]);

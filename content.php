@@ -4,7 +4,7 @@
 	$id = isset($_GET['id']) ? $_GET['id'] : NULL;
     $id = filter_var($id,FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
     if (!$id) {
-        echo "<script>alert('非法的文章id');window.location.href='../admin/index.php'</script>";
+        echo "<script>alert('非法的文章id');window.location.href='./index.php'</script>";
         exit;
     }
 	//查询对应id的文章

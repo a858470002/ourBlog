@@ -37,12 +37,20 @@ function login ($data,$dbh)
 
 function addArticle ($data,$dbh,$user_id) 
 {
-    $requiredKeys = array('title', 'formaltext', 'column', 'tag', 'link', 'isLink');
+    $requiredKeys = array('column', 'title', 'formaltext', 'link', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("Missing requied key $key");
         }
     }
+
+    //column
+    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+    if (!$column) {
+        throw new InvalidArgumentException('Column is invalid');
+    }
+
+    //title
     $title = trim($data['title']);
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
@@ -52,38 +60,32 @@ function addArticle ($data,$dbh,$user_id)
         throw new InvalidArgumentException('Title is over range(64)!');
     }
 
-    if ($data['link'] == ''){
-        $link = null;
-    } else {
-        $link = $data['link'];
-    }
-    $is_link = $data['isLink'];
-    if (!($is_link == 0 || $is_link == 1)) {
-        throw new InvalidArgumentException("'IsLink' is invalid");
-    }
-    $formaltext = $data['formaltext'];
-    if ($is_link == 0 && empty($formaltext)) {
-        throw new InvalidArgumentException('Please fill the formaltext');
-    }
-    if ($is_link == 1 && empty($link)) {
-        throw new InvalidArgumentException('Please set a link');
+    //link or formaltext
+    $link = trim($data['link']);  
+    $formaltext = trim($data['formaltext']);
+
+    if (empty($link) && empty($formaltext)) {
+        throw new InvalidArgumentException("You should fill content");
     }
     if (!empty($formaltext) && !empty($link)) {
         throw new InvalidArgumentException('One of params(formaltext, link) must be empty');
     }
-    $link = filter_var($link,FILTER_VALIDATE_URL);
-    if (!$link) {
-        throw new InvalidArgumentException('Link is invalid');
+    if (!empty($formaltext)) {
+        $length  = mb_strlen($formaltext,'UTF-8');
+        if ($length > 65534) {
+            throw new InvalidArgumentException('Formaltext is over range(65535)!');
+        }
+        $is_link = 0;
     }
-    $length  = mb_strlen($formaltext,'UTF-8');
-    if ($length > 65534) {
-        throw new InvalidArgumentException('Formaltext is over range(65535)!');
+    if (!empty($link)) {
+        $link = filter_var($link,FILTER_VALIDATE_URL);
+        if (!$link) {
+            throw new InvalidArgumentException('Link is invalid');
+        }
+        $is_link = 1;
     }
-    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-    if (!$column) {
-        throw new InvalidArgumentException('Column is invalid');
-    }
-    
+
+    //tag
     if (!empty($data['tag'])) {
         $tags = explode(',', $data['tag']);
         if (count($tags) >= 10) {
@@ -198,31 +200,29 @@ function addArticle ($data,$dbh,$user_id)
 
 function editArticle ($data,$dbh,$user_id,$article_id) 
 {
-    $requiredKeys = array('title', 'formaltext', 'link', 'column', 'tag');
+    $requiredKeys = array('column', 'title', 'formaltext', 'link', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("missing requied key $key");
         }
     }
+
+    //column
+    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+    if (!$column) {
+        throw new InvalidArgumentException('Column is invalid');
+    }
+    //title
     $title = trim($data['title']);
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
     }
-
     $length = mb_strlen($title,"UTF-8");
     if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
 
-    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-    if (!$column) {
-        throw new InvalidArgumentException('Column is invalid');
-    }
-    $article_id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
-    if (!$article_id) {
-        throw new InvalidArgumentException('Articleid is invalid');
-    }
-
+    //tag
     if (!empty($data["tag"])) {
         $tags_get = explode(',', $data['tag']);
         if (count($tags_get)>=10) {
@@ -242,31 +242,32 @@ function editArticle ($data,$dbh,$user_id,$article_id)
 
     // User check
     $sql = "SELECT * from article where id = $article_id and user_id = $user_id";
-    $result = $dbh->query($sql)->fetchAll();
+    $result = $dbh->query($sql)->fetch();
     if (empty($result)) {
         throw new InvalidArgumentException("It's not your article");
     }
-    if ($result[0]['is_link'] == 0) {
-        if (!isset($data['formaltext'])) {
+    //formaltext or link
+    $formaltext = $data['formaltext'];
+    $link = $data['link'];
+    if (!empty($formaltext) && !empty($link)) {
+        throw new InvalidArgumentException('One of params(formaltext, link) must be empty');
+    }
+    if ($result['is_link'] == 0) {
+        if (!isset($formaltext)) {
             throw new InvalidArgumentException('Missing requied key formaltext');
-            
         }
-        $formaltext = $data['formaltext'];
         if (empty($formaltext)) {
             throw new InvalidArgumentException('The formaltext can not be empty');
         }
-
         $length = mb_strlen($formaltext,'UTF-8');
         if ($length > 65534) {
             throw new InvalidArgumentException('Formaltext is over range(65535)!');
         }
-        $link = NULL;
-    } else {
-        if (!isset($data['link'])) {
+    } 
+    if ($result['is_link'] == 1) {
+        if (!isset($link)) {
             throw new InvalidArgumentException('Missing requied key link');
-            
         }
-        $link = $data['link'];
         if (empty($link)) {
             throw new InvalidArgumentException('The link can not be empty');
         }
@@ -274,9 +275,11 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if (!$link) {
             throw new InvalidArgumentException('Link is invalid');
         }
-        $formaltext = '';
+        $length = mb_strlen($link,'UTF-8');
+        if ($length > 1000) {
+            throw new InvalidArgumentException('Link is over range(1000)!');
+        }
     }
-
 
     try {
         // 1:Select * from tag_mid 

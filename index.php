@@ -5,7 +5,7 @@
 	if ($column != NULL){
 		$column = filter_var($column,FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
 	    if (!$column) {
-	        echo "<script>alert('非法的column id');window.location.href='../admin/index.php'</script>";
+	        echo "<script>alert('非法的column id');window.location.href='./index.php'</script>";
 	        exit;
 	    } 
 	} 

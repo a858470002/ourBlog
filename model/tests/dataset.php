@@ -8,7 +8,7 @@ function arrset() {
                     "formaltext" => "wojiushi zhengwen",
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null,
+                    "link"       => '',
                     "is_link"    => 0
                     ),
                 array(
@@ -26,7 +26,7 @@ function arrset() {
                     "formaltext" => "testFormaltext", 
                     "column"     => 1,
                     "user_id"    => 1,
-                    "link"       => null,
+                    "link"       => '',
                     "is_link"    => 0
                 )
             ),

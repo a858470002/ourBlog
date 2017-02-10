@@ -6,10 +6,11 @@
         header("Location: /admin/index.php");
         exit;
     }
-    session_start();
-    header("content-type:text/html;charset=utf-8");
+    include("./csrf.php");
     include("./database.php");
     include("../model/main.php");
+    session_start();
+    header("content-type:text/html;charset=utf-8");
     
     switch ($action) {
         //登录判断
@@ -17,7 +18,7 @@
             try {
                 $user_id = login($_POST,$dbh);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/login.php'</script>";
+                echo "<script>alert('".$e->getMessage()."');window.location.href='../admin/login.php'</script>";
                 exit;
             } catch (Exception $e) {
                 echo "System error";
@@ -39,7 +40,7 @@
             try {
                 addArticle($_POST,$dbh,$user_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/add.php'</script>";
+                echo "<script>alert('".$e->getMessage()."');window.location.href='../admin/add.php'</script>";
                 exit;
             } catch (Exception $e) {
                 echo $e->getMessage();
@@ -63,7 +64,7 @@
             try {
                 editArticle($_POST,$dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert('{$e->getMessage()}');window.location.href='../admin/edit.php?id={$article_id}'</script>";
+                echo "<script>alert('".$e->getMessage()."');window.location.href='../admin/edit.php?id={$article_id}'</script>";
                 exit;
             } catch (Exception $e) {
                 echo $e->getMessage();
@@ -87,7 +88,7 @@
             try {
                 deleteArticle($dbh,$user_id,$article_id);
             } catch (InvalidArgumentException $e) {
-                echo "<script>alert(".$e->getMessage().");window.location.href='../admin/index.php'</script>";
+                echo "<script>alert('".$e->getMessage()."');window.location.href='../admin/index.php'</script>";
                 exit;
             } catch (Exception $e) {
                 echo $e->getMessage();
