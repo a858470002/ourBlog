@@ -1,6 +1,6 @@
 <?php
 
-function login ($data,$dbh)
+function login($data, $dbh)
 {
     //Param check
     if (!isset($data['email'])) {
@@ -9,7 +9,7 @@ function login ($data,$dbh)
     if (empty($data['email'])) {
         throw new InvalidArgumentException('Please fill the Email');
     }
-    $email = filter_var(($data['email']),FILTER_VALIDATE_EMAIL);
+    $email = filter_var(($data['email']), FILTER_VALIDATE_EMAIL);
     if (!$email) {
         throw new InvalidArgumentException('Illegal Email address');
     }
@@ -24,18 +24,18 @@ function login ($data,$dbh)
 
     //PDO start
     $sth = $dbh->prepare("SELECT * from user where `email` = :email and password = :password");
-    $sth->bindValue(':email',$email,PDO::PARAM_STR);
-    $sth->bindValue(':password',$password,PDO::PARAM_INT);
+    $sth->bindValue(':email', $email, PDO::PARAM_STR);
+    $sth->bindValue(':password', $password, PDO::PARAM_INT);
     $sth->execute();
 
     if ($sth->rowCount()==0) {
-        return False;
+        return false;
     }
     $user = $sth->fetch();
     return $user['id'];
 }
 
-function addArticle ($data,$dbh,$user_id) 
+function addArticle($data, $dbh, $user_id)
 {
     $requiredKeys = array('column', 'title', 'formaltext', 'link', 'tag');
     foreach ($requiredKeys as $key) {
@@ -45,7 +45,7 @@ function addArticle ($data,$dbh,$user_id)
     }
 
     //column
-    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+    $column = filter_var($data['column'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
     if (!$column) {
         throw new InvalidArgumentException('Column is invalid');
     }
@@ -55,13 +55,13 @@ function addArticle ($data,$dbh,$user_id)
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
     }
-    $length = mb_strlen($title,'UTF-8');
+    $length = mb_strlen($title, 'UTF-8');
     if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
 
     //link or formaltext
-    $link = trim($data['link']);  
+    $link = trim($data['link']);
     $formaltext = trim($data['formaltext']);
 
     if (empty($link) && empty($formaltext)) {
@@ -71,14 +71,14 @@ function addArticle ($data,$dbh,$user_id)
         throw new InvalidArgumentException('One of params(formaltext, link) must be empty');
     }
     if (!empty($formaltext)) {
-        $length  = mb_strlen($formaltext,'UTF-8');
+        $length  = mb_strlen($formaltext, 'UTF-8');
         if ($length > 65534) {
             throw new InvalidArgumentException('Formaltext is over range(65535)!');
         }
         $is_link = 0;
     }
     if (!empty($link)) {
-        $link = filter_var($link,FILTER_VALIDATE_URL);
+        $link = filter_var($link, FILTER_VALIDATE_URL);
         if (!$link) {
             throw new InvalidArgumentException('Link is invalid');
         }
@@ -92,7 +92,7 @@ function addArticle ($data,$dbh,$user_id)
             throw new InvalidArgumentException('Don\'t use over 10 tags');
         }
         foreach ($tags as $value) {
-            $length = mb_strlen($value,'UTF-8');
+            $length = mb_strlen($value, 'UTF-8');
             if ($length > 32) {
                 throw new InvalidArgumentException('Some of tags is over range(32)!');
             }
@@ -106,19 +106,19 @@ function addArticle ($data,$dbh,$user_id)
     try {
         // 1.insert new article
         $sth = $dbh->prepare("INSERT into article(title,formaltext,`column`,user_id,link,is_link) VALUES (:title,:ftext,:column,:user_id,:link,:is_link);");
-        $sth->bindValue(':title',$title,PDO::PARAM_STR);
-        $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
-        $sth->bindValue(':column',$column,PDO::PARAM_INT);
-        $sth->bindValue(':user_id',$user_id,PDO::PARAM_INT);
-        $sth->bindValue(':link',$link,PDO::PARAM_STR);
-        $sth->bindValue(':is_link',$is_link,PDO::PARAM_INT);
+        $sth->bindValue(':title', $title, PDO::PARAM_STR);
+        $sth->bindValue(':ftext', $formaltext, PDO::PARAM_STR);
+        $sth->bindValue(':column', $column, PDO::PARAM_INT);
+        $sth->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $sth->bindValue(':link', $link, PDO::PARAM_STR);
+        $sth->bindValue(':is_link', $is_link, PDO::PARAM_INT);
         $sth->execute();
 
         $article_id = $dbh->lastInsertId();
 
         // If have tags
         if (!empty($tags)) {
-            // Select all tags ,match the same 
+            // Select all tags ,match the same
             $param = array();
             foreach ($tags as $value) {
                 $param[] = $dbh->quote($value);
@@ -158,11 +158,10 @@ function addArticle ($data,$dbh,$user_id)
 
             $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
             $sth->execute();
-
         }
 
         if (!empty($tags)) {
-            // 4.Select diff tags id 
+            // 4.Select diff tags id
             $param = array();
             foreach ($tags as $value) {
                 $param[] = $dbh->quote($value);
@@ -191,14 +190,13 @@ function addArticle ($data,$dbh,$user_id)
         }
 
         $dbh->commit();
-
     } catch (Exception $e) {
         $dbh->rollBack();
         throw $e;
     }
 }
 
-function editArticle ($data,$dbh,$user_id,$article_id) 
+function editArticle($data, $dbh, $user_id, $article_id)
 {
     $requiredKeys = array('column', 'title', 'formaltext', 'link', 'tag');
     foreach ($requiredKeys as $key) {
@@ -208,7 +206,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     }
 
     //column
-    $column = filter_var($data['column'],FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
+    $column = filter_var($data['column'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
     if (!$column) {
         throw new InvalidArgumentException('Column is invalid');
     }
@@ -217,7 +215,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     if (empty($title)) {
         throw new InvalidArgumentException('Please fill the title');
     }
-    $length = mb_strlen($title,"UTF-8");
+    $length = mb_strlen($title, "UTF-8");
     if ($length > 64) {
         throw new InvalidArgumentException('Title is over range(64)!');
     }
@@ -229,7 +227,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
             throw new InvalidArgumentException("Don't use over 10 tags");
         }
         foreach ($tags_get as $value) {
-            $length = mb_strlen($value,"UTF-8");
+            $length = mb_strlen($value, "UTF-8");
             if ($length > 32) {
                 throw new InvalidArgumentException('Some of tags is over range(32)!');
             }
@@ -259,11 +257,11 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if (empty($formaltext)) {
             throw new InvalidArgumentException('The formaltext can not be empty');
         }
-        $length = mb_strlen($formaltext,'UTF-8');
+        $length = mb_strlen($formaltext, 'UTF-8');
         if ($length > 65534) {
             throw new InvalidArgumentException('Formaltext is over range(65535)!');
         }
-    } 
+    }
     if ($result['is_link'] == 1) {
         if (!isset($link)) {
             throw new InvalidArgumentException('Missing requied key link');
@@ -271,20 +269,20 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         if (empty($link)) {
             throw new InvalidArgumentException('The link can not be empty');
         }
-        $link = filter_var($link,FILTER_VALIDATE_URL);
+        $link = filter_var($link, FILTER_VALIDATE_URL);
         if (!$link) {
             throw new InvalidArgumentException('Link is invalid');
         }
-        $length = mb_strlen($link,'UTF-8');
+        $length = mb_strlen($link, 'UTF-8');
         if ($length > 1000) {
             throw new InvalidArgumentException('Link is over range(1000)!');
         }
     }
 
     try {
-        // 1:Select * from tag_mid 
+        // 1:Select * from tag_mid
         $sth = $dbh->prepare("SELECT * from tag_mid where article_id = :article_id");
-        $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+        $sth->bindValue(':article_id', $article_id, PDO::PARAM_INT);
         $sth->execute();
 
         $midTags = $sth->fetchAll();
@@ -297,28 +295,28 @@ function editArticle ($data,$dbh,$user_id,$article_id)
         $dbh->beginTransaction();
         // 2:Update1: article
         $sth = $dbh->prepare("UPDATE article set title = :title,formaltext = :ftext,`column` = :column, link = :link where id=:article_id");
-        $sth->bindValue(':title',$title,PDO::PARAM_STR);
-        $sth->bindValue(':ftext',$formaltext,PDO::PARAM_STR);
-        $sth->bindValue(':column',$column,PDO::PARAM_INT);
-        $sth->bindValue(':link',$link,PDO::PARAM_STR);
-        $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+        $sth->bindValue(':title', $title, PDO::PARAM_STR);
+        $sth->bindValue(':ftext', $formaltext, PDO::PARAM_STR);
+        $sth->bindValue(':column', $column, PDO::PARAM_INT);
+        $sth->bindValue(':link', $link, PDO::PARAM_STR);
+        $sth->bindValue(':article_id', $article_id, PDO::PARAM_INT);
         $sth->execute();
 
         // 3:Delete or get old tags
         if (empty($tags_get)) {
             // 3.1:If empty tags, delete all in tag_mid, finish.
             $sth = $dbh->prepare("DELETE from tag_mid where article_id = :article_id");
-            $sth->bindValue(':article_id',$article_id,PDO::PARAM_INT);
+            $sth->bindValue(':article_id', $article_id, PDO::PARAM_INT);
             $sth->execute();
         } else {
-            // 3.2:If have tags, select in all tags ,match the same 
+            // 3.2:If have tags, select in all tags ,match the same
             $param = "";
             foreach ($tags_get as $value) {
                 $param .= $dbh->quote($value).",";
             }
-            $param = trim($param,",");
+            $param = trim($param, ",");
             $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
-            $sth->bindValue(':article_id',$article_id,PDO::PARAM_STR);
+            $sth->bindValue(':article_id', $article_id, PDO::PARAM_STR);
             $sth->execute();
 
             $sameTags = $sth->fetchAll();
@@ -336,9 +334,9 @@ function editArticle ($data,$dbh,$user_id,$article_id)
                 foreach ($midTags_id as $value) {
                     $param .= $dbh->quote($value).",";
                 }
-                $param = trim($param,",");
+                $param = trim($param, ",");
                 $sth = $dbh->prepare("SELECT * from tag WHERE id in ($param)");
-                $sth->bindValue(':article_id',$article_id,PDO::PARAM_STR);
+                $sth->bindValue(':article_id', $article_id, PDO::PARAM_STR);
                 $sth->execute();
 
                 $oldTags = array();
@@ -352,9 +350,9 @@ function editArticle ($data,$dbh,$user_id,$article_id)
                 $tags_original = array();
             }
             
-            $arr_insert = array_diff($tags_get, $tags_original); 
-            $arr_delete = array_diff($tags_original, $tags_get); 
-            $arr_real_insert = array_diff($arr_insert, $arr_name); 
+            $arr_insert = array_diff($tags_get, $tags_original);
+            $arr_delete = array_diff($tags_original, $tags_get);
+            $arr_real_insert = array_diff($arr_insert, $arr_name);
             $arr_real_delete = array_diff($arr_delete, $arr_name);
         }
 
@@ -367,17 +365,17 @@ function editArticle ($data,$dbh,$user_id,$article_id)
                 foreach ($arr_real_insert as $value) {
                     $sqlValues .= "(".$dbh->quote($value).",$user_id),";
                 }
-                $sqlValues = trim($sqlValues,",");
-                $sth = $dbh->prepare("INSERT into tag(name,user_id) VALUES $sqlValues");
+                $sqlValues = trim($sqlValues, ",");
+                $sth = $dbh->prepare("INSERT into tag(name, user_id) VALUES $sqlValues");
                 $sth->execute();
             }
 
-            //Select diff tags id 
+            //Select diff tags id
             $param = "";
             foreach ($arr_insert as $value) {
                 $param .= $dbh->quote($value).",";
             }
-            $param = trim($param,",");
+            $param = trim($param, ",");
             $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
             $sth->execute();
             $diffTags = $sth->fetchAll();
@@ -391,21 +389,21 @@ function editArticle ($data,$dbh,$user_id,$article_id)
             // Insert3: new tag & article (table tag_mid)
             $sqlValues = '';
             foreach ($arr_id_insert as $value) {
-                $sqlValues .= "($value,$article_id),";
+                $sqlValues .= "($value, $article_id),";
             }
-            $sqlValues = trim($sqlValues,",");
-            $sth = $dbh->prepare("INSERT into tag_mid(tag_id,article_id) VALUES $sqlValues");
+            $sqlValues = trim($sqlValues, ",");
+            $sth = $dbh->prepare("INSERT into tag_mid(tag_id, article_id) VALUES $sqlValues");
             $sth->execute();
         }
 
         // 5:Delete
         if (!empty($arr_delete)) {
-            //Select diff tags id 
+            //Select diff tags id
             $param = '';
             foreach ($arr_delete as $value) {
                 $param .= $dbh->quote($value).',';
             }
-            $param = trim($param,',');
+            $param = trim($param, ',');
             $sth = $dbh->prepare("SELECT * from tag WHERE name in ($param)");
             $sth->execute();
             $diffTags = $sth->fetchAll();
@@ -421,7 +419,7 @@ function editArticle ($data,$dbh,$user_id,$article_id)
             foreach ($arr_id_delete as $value) {
                 $param .= $dbh->quote($value).',';
             }
-            $param = trim($param,',');
+            $param = trim($param, ',');
             $sth = $dbh->prepare("DELETE from tag_mid where tag_id in ($param) and article_id = $article_id");
             $sth->execute();
         }
@@ -433,10 +431,10 @@ function editArticle ($data,$dbh,$user_id,$article_id)
     }
 }
 
-function deleteArticle ($dbh,$user_id,$article_id) 
+function deleteArticle($dbh, $user_id, $article_id)
 {
     //Valid id check
-    $id = filter_var($article_id,FILTER_VALIDATE_INT,array("options" => array("min_range" => 1)));
+    $id = filter_var($article_id, FILTER_VALIDATE_INT, array("options" => array("min_range" => 1)));
     if (!$id) {
         throw new InvalidArgumentException("Illegal operation");
     }
