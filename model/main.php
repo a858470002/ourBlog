@@ -104,6 +104,7 @@ function addArticle($data, $dbh, $user_id)
     $dbh->beginTransaction();
 
     try {
+        /** modify here: 如果填入同样的标签，需要过滤掉 **/
         // 1.insert new article
         $sth = $dbh->prepare("INSERT into article(title,formaltext,`column`,user_id,link,is_link) VALUES (:title,:ftext,:column,:user_id,:link,:is_link);");
         $sth->bindValue(':title', $title, PDO::PARAM_STR);
@@ -198,7 +199,7 @@ function addArticle($data, $dbh, $user_id)
 
 function editArticle($data, $dbh, $user_id, $article_id)
 {
-    $requiredKeys = array('column', 'title', 'formaltext', 'link', 'tag');
+    $requiredKeys = array('column', 'title', 'tag');
     foreach ($requiredKeys as $key) {
         if (!isset($data[$key])) {
             throw new InvalidArgumentException("missing requied key $key");

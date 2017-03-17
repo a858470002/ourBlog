@@ -2,42 +2,42 @@
     include("./header.php");
     include("../config/database.php");
 
-    if (!isset($_GET['id'])) {
-        echo "<center><h1>Forbidden!</h1></center>";
-        exit;
+if (!isset($_GET['id'])) {
+    echo "<center><h1>Forbidden!</h1></center>";
+    exit;
+}
+$id = $_GET['id'];
+$id = filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+if (!$id) {
+    echo "<script>alert('非法的文章id');window.location.href='../admin/index.php'</script>";
+    exit;
+}
+
+$article = $dbh->query("SELECT * from article where id = $id and user_id = $user_id")->fetch();
+if ($article == null) {
+    echo "<center>Article don't exists or illegal user !</center>";
+    exit;
+}
+
+$column  = $dbh->query('SELECT * from types')->fetchAll();
+//Select from tag_mid 
+$tag_mid = $dbh->query("SELECT tag_id from tag_mid where article_id = $id")->fetchAll();
+
+if (!empty($tag_mid)) {
+    foreach ($tag_mid as $value) {
+        $tag_id[] = $value['tag_id'];
     }
-    $id = $_GET['id'];
-    $id = filter_var($id,FILTER_VALIDATE_INT,array('options' => array('min_range' => 1)));
-    if (!$id) {
-        echo "<script>alert('非法的文章id');window.location.href='../admin/index.php'</script>";
-        exit;
-    } 
+    $param = implode(',', $tag_id);
+    
+    $tag_all = $dbh->query("SELECT name from tag where id in ($param)")->fetchAll();
 
-    $article = $dbh->query("SELECT * from article where id = $id and user_id = $user_id")->fetch();
-    if ($article == null) {
-        echo "<center>Article don't exists or illegal user !</center>";
-        exit;
+    foreach ($tag_all as $value) {
+        $tag_name[] = $value['name'];
     }
-
-    $column  = $dbh->query('SELECT * from types')->fetchAll();
-    //Select from tag_mid 
-    $tag_mid = $dbh->query("SELECT tag_id from tag_mid where article_id = $id")->fetchAll();
-
-    if (!empty($tag_mid)){
-        foreach ($tag_mid as $value) {
-            $tag_id[] = $value['tag_id'];
-        }
-        $param = implode(',', $tag_id);
-        
-        $tag_all = $dbh->query("SELECT name from tag where id in ($param)")->fetchAll();
-
-        foreach ($tag_all as $value) {
-            $tag_name[] = $value['name'];
-        }
-        $tag_name = implode(',',$tag_name);
-    } else {
-        $tag_name = '';
-    }
+    $tag_name = implode(',', $tag_name);
+} else {
+    $tag_name = '';
+}
 ?>
 <html>
 <head>
@@ -51,17 +51,17 @@
         <!-- content -->
         <form id="form" action="../config/functions.php?action=edit&id=<?php echo $article['id']; ?>" method="post">
             <input type="hidden" id="article" value="<?php echo $id ?>">
-			<select id="column" name="column" style="min-width:200px;background: white;">
-				<option value="0">所属栏目</option>
-				<?php
-					foreach ($column as $v) {
-						if ($v['id'] == $article['column']) {
-							echo "<option value=".$v['id']." selected>".htmlspecialchars($v['name'])."</option>";
-						} else {
-							echo "<option value=".$v['id'].">".htmlspecialchars($v['name'])."</option>";
-						}
-					};
-				?>
+            <select id="column" name="column" style="min-width:200px;background: white;">
+                <option value="0">所属栏目</option>
+                <?php
+                foreach ($column as $v) {
+                    if ($v['id'] == $article['column']) {
+                        echo "<option value=".$v['id']." selected>".htmlspecialchars($v['name'])."</option>";
+                    } else {
+                        echo "<option value=".$v['id'].">".htmlspecialchars($v['name'])."</option>";
+                    }
+                }
+                ?>
             </select><br><br>
             <input id="title" type="text" name="title" placeholder="标题" value="<?php echo htmlspecialchars($article['title']) ?>" style="width:80%"><br><br>
             <?php
